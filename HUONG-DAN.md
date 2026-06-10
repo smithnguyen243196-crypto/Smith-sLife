@@ -1,87 +1,67 @@
-# Smith Apps — 4 công cụ trong 1 trang
+# Smith App — 4 công cụ, MỘT ứng dụng, đồng bộ mọi thiết bị
 
-## Cấu trúc
+Bản xây lại hoàn toàn: một ứng dụng React duy nhất, chuyển công cụ không tải lại trang,
+dữ liệu nhập dở không mất khi chuyển qua lại, và TOÀN BỘ cấu hình nằm trên server —
+không phải cài đặt gì trên từng máy.
 
-```
-smith-apps/
-├── index.html          ← Trang chủ (chọn công cụ)
-├── kiem-ket.html       ← App Kiểm Két (React)
-├── ngay.html           ← App Ngày — nhật ký & nhiệm vụ (React)
-├── public/
-│   ├── vi-ca-nhan.html ← App Ví Cá Nhân (HTML tĩnh, giữ nguyên)
-│   └── tinh-lai.html   ← App Tính Lãi Huyên Thọ (HTML tĩnh, giữ nguyên)
-├── api/                ← Toàn bộ serverless function gộp chung
-│   ├── notion.js            (app Ngày)
-│   ├── save-ket.js          (Kiểm Két → Notion)
-│   ├── sync.js              (Kiểm Két → Upstash đồng bộ)
-│   ├── vi-notion.js         (Ví Cá Nhân — đã đổi tên từ notion.js)
-│   ├── vi-notion-read.js    (Ví Cá Nhân)
-│   └── vi-notion-delete.js  (Ví Cá Nhân)
-└── src/
-    ├── kiem-ket/       ← code React Kiểm Két (giữ nguyên)
-    └── ngay/           ← code React Ngày (giữ nguyên)
-```
+## Bên trong có gì
 
-Mỗi app vẫn giữ nguyên giao diện và code cũ. Chỉ có 2 thay đổi:
-1. Ba endpoint của Ví Cá Nhân đổi tên (`/api/notion` → `/api/vi-notion`,
-   `/api/notion-read` → `/api/vi-notion-read`, `/api/notion-delete` → `/api/vi-notion-delete`)
-   để không trùng với endpoint của app Ngày. Đã sửa sẵn trong `vi-ca-nhan.html`.
-2. Mỗi trang có thêm nút 🏠 nhỏ ở mép phải màn hình để quay về trang chủ.
+| Tab        | Chức năng                          | Lưu trữ & đồng bộ                       |
+|------------|------------------------------------|------------------------------------------|
+| Trang chủ  | Lời chào + câu nói của ngày        | Câu nói đọc từ Notion (📌 Câu Nói Hay)  |
+| Kiểm Két   | Đếm tiền, thu chi, đối chiếu       | Nháp: Upstash · Kết quả: Notion         |
+| Ví         | Thu chi cá nhân                    | Notion (cấu hình server — xem dưới)     |
+| Ngày       | Nhật ký, thói quen, nhiệm vụ       | Notion                                   |
+| Tính Lãi   | Tính lãi + LỊCH SỬ MỚI             | Lịch sử: Upstash, đồng bộ mọi thiết bị  |
 
-## Triển khai (GitHub Desktop + Vercel)
+Mới so với bản cũ:
+- Ví Cá Nhân: token + Database ID chuyển lên server → mở máy nào cũng thấy cùng dữ liệu,
+  không còn cảnh nhập token trên từng máy.
+- Tính Lãi: thêm "Lưu kết quả" — lịch sử tính lãi cho khách đồng bộ giữa điện thoại và máy tính.
+- Toàn bộ là một trang (SPA): đang đếm két, chuyển qua tra Ví rồi quay lại — số liệu vẫn nguyên.
 
-1. Giải nén thư mục `smith-apps` vào Home.
-2. GitHub Desktop → File → Add Local Repository → chọn `smith-apps`
-   → create a repository → Commit to main → Publish repository.
-3. Vercel → Add New → Project → import repo `smith-apps` → Deploy
-   (Vercel tự nhận Vite, không cần đổi gì).
+## Triển khai
 
-## Biến môi trường (Settings → Environment Variables)
+1. Giải nén thư mục `smith-app`.
+2. GitHub Desktop → Add Local Repository → `smith-app` → create repository → Publish.
+3. Vercel → Add New → Project → import repo `smith-app` → Deploy.
 
-| Key            | Dùng cho           | Ghi chú                                  |
-|----------------|--------------------|-------------------------------------------|
-| `NOTION_TOKEN` | Kiểm Két + Ngày    | Một token duy nhất — xem lưu ý bên dưới  |
+## Biến môi trường (Vercel → Settings → Environment Variables)
 
-Sau đó vào tab **Storage** → Connect database Upstash (đang dùng cho kiem-ket)
-→ Vercel tự thêm `KV_REST_API_URL` và `KV_REST_API_TOKEN`.
+| Key               | Bắt buộc | Dùng cho                | Ghi chú                                              |
+|-------------------|----------|-------------------------|------------------------------------------------------|
+| `NOTION_TOKEN`    | Có       | Ngày, Kiểm Két, Câu nói | Token integration đã chia sẻ với Smith's life + DB Kiểm Két |
+| `VI_DB_ID`        | Có       | Ví Cá Nhân              | Database ID của database thu chi (32 ký tự)          |
+| `VI_NOTION_TOKEN` | Không    | Ví Cá Nhân              | CHỈ cần nếu database Ví dùng integration khác        |
 
-Xong tất cả → **Deployments → ••• → Redeploy**.
+**Lấy `VI_DB_ID` ở đâu?** Mở app Ví cũ trên điện thoại → ⚙️ Cài đặt → ô "Database ID" — copy
+nguyên chuỗi đó. Hoặc mở database thu chi trên Notion, lấy 32 ký tự trong URL trước dấu `?`.
 
-## LƯU Ý QUAN TRỌNG về NOTION_TOKEN
+**Về token cho Ví:** nếu trước giờ database Ví được chia sẻ với một integration riêng,
+có 2 lựa chọn:
+- Gọn nhất: mở database thu chi trên Notion → ••• → Connections → thêm integration đang dùng
+  cho app Ngày → chỉ cần một `NOTION_TOKEN`.
+- Hoặc: thêm biến `VI_NOTION_TOKEN` = token của integration riêng đó.
 
-Trước đây Kiểm Két và Ngày là 2 project riêng, có thể dùng 2 integration khác nhau.
-Giờ gộp lại chỉ còn MỘT biến `NOTION_TOKEN`, nên integration của token đó phải
-được chia sẻ quyền với CẢ HAI nơi:
+## Upstash (đồng bộ Kiểm Két + lịch sử Tính Lãi)
 
-1. Database **Kiểm Két** → ••• → Connections → chọn integration
-2. Trang **Smith's life** (chứa database Ngày + Nhiệm Vụ) → ••• → Connections → chọn integration
+Vercel → project `smith-app` → tab **Storage** → Connect database Upstash (cái đang dùng cho
+kiem-ket cũ). Vercel tự thêm `KV_REST_API_URL` và `KV_REST_API_TOKEN`.
 
-Thiếu nơi nào thì app tương ứng sẽ báo "không tìm thấy database".
+## Sau khi đặt xong biến môi trường
 
-Ví Cá Nhân không dùng biến môi trường — token nhập trực tiếp trong phần cài đặt
-của app như cũ.
+Deployments → ••• → **Redeploy** (bắt buộc — biến môi trường chỉ ăn ở lần build mới).
 
-## Đường dẫn sau khi deploy
+## Kiểm tra nhanh sau deploy
 
-- `https://<ten-project>.vercel.app/` — trang chủ (có câu nói của ngày)
-- `/kiem-ket.html` — Kiểm Két
-- `/ngay.html` — Ngày
-- `/vi-ca-nhan.html` — Ví Cá Nhân
-- `/tinh-lai.html` — Tính Lãi Huyên Thọ
+- `https://<link>/api/sync` → phải thấy `{"ok":true,...}` (Upstash sống)
+- `https://<link>/api/quote` → phải thấy câu nói (Notion sống)
+- Mở tab Ví → chấm tròn cạnh 🔄 chuyển XANH là Ví đã nối Notion qua server.
 
-## Câu nói của ngày (/api/quote)
+## Ghi chú kỹ thuật
 
-Mỗi trang hiển thị một "câu nói của ngày" lấy từ database Notion
-**📌 Câu Nói Hay (CEO & Tỷ Phú)** (nằm dưới trang Smith's life).
-- Mỗi ngày hiện một câu, xoay vòng theo thứ tự tạo — thêm câu mới vào Notion là app tự dùng.
-- Ưu tiên hiện "Bản dịch (TV)", không có thì hiện "Câu gốc"; kèm tên người nói.
-- Dùng chung NOTION_TOKEN với app Ngày. Vì database này nằm dưới trang Smith's life
-  (đã chia sẻ với integration) nên KHÔNG cần thêm bước Connections nào.
-- Kết quả được cache 1 giờ ở CDN để không gọi Notion mỗi lượt mở trang.
-
-## Thanh điều hướng
-
-Thanh 4 tab nằm cố định ở ĐÁY màn hình trên cả 4 trang app.
-Hai thanh có sẵn của app được nâng lên trên thanh tab để không che nhau:
-- Thanh "Lưu" của app Ngày (.savebar)
-- Thanh điều hướng riêng của Ví Cá Nhân (.bnav)
+- `src/modules/` — mỗi công cụ một module; KiemKet.jsx và Ngay.jsx giữ nguyên code gốc,
+  ViCaNhan.jsx và TinhLai.jsx viết lại bằng React trung thành giao diện cũ.
+- CSS của từng module được scope riêng (`.pg-vi`, `.pg-ngay`, `.pg-lai`, `.pg-home`) — không đụng nhau.
+- `api/sync.js` giờ nhận `?key=kiemket` (mặc định) hoặc `?key=tinhlai`.
+- Các project cũ (kiem-ket, vi-ca-nhan...) có thể xoá trên Vercel sau khi bản này chạy ổn.
