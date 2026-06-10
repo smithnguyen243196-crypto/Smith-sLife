@@ -1,0 +1,49 @@
+/* ===== Khung chung (shell) ===== */
+:root {
+  --navh: calc(58px + env(safe-area-inset-bottom));
+  --hub-bg: #14241B;
+  --hub-mist: #9DB5A6;
+  --hub-sun: #E8913A;
+}
+html, body { margin: 0; padding: 0; }
+body { background: var(--hub-bg); }
+.shell { min-height: 100vh; display: flex; flex-direction: column; }
+.shell-main { flex: 1; padding-bottom: var(--navh); }
+
+/* Câu nói của ngày */
+.qotd {
+  background: var(--hub-bg); color: #DCE7DE;
+  font-family: 'Be Vietnam Pro', system-ui, sans-serif;
+  padding: calc(10px + env(safe-area-inset-top)) 16px 10px;
+  font-size: 13px; line-height: 1.5; text-align: center;
+}
+.qotd em { font-style: italic; }
+.qotd .qotd-ai { color: var(--hub-sun); font-style: normal; font-weight: 600; white-space: nowrap; }
+
+/* Thanh điều hướng đáy */
+.app-tabs {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 40;
+  display: flex; background: var(--hub-bg);
+  padding-bottom: env(safe-area-inset-bottom);
+  font-family: 'Be Vietnam Pro', system-ui, sans-serif;
+  box-shadow: 0 -4px 16px rgba(0,0,0,.22);
+}
+.app-tabs button {
+  flex: 1; text-align: center; padding: 10px 4px 9px;
+  font-size: 12.5px; font-weight: 600; color: var(--hub-mist);
+  background: none; border: none; border-top: 2.5px solid transparent;
+  white-space: nowrap; cursor: pointer; font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+.app-tabs button.on { color: #FFFFFF; border-top-color: var(--hub-sun); }
+.app-tabs button.thome {
+  flex: 0 0 56px; display: flex; align-items: center; justify-content: center;
+  color: var(--hub-sun); padding: 8px 0 7px;
+}
+.app-tabs button.thome.on { color: #FFFFFF; }
+
+/* Module nền sáng cần phủ kín */
+.pg { min-height: calc(100vh - var(--navh)); }
+
+/* Thanh "Lưu" của app Ngày nâng lên trên thanh điều hướng */
+.pg-ngay .savebar { bottom: var(--navh) !important; padding-bottom: 12px !important; }
