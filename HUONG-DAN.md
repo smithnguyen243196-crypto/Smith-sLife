@@ -63,8 +63,25 @@ của app như cũ.
 
 ## Đường dẫn sau khi deploy
 
-- `https://<ten-project>.vercel.app/` — trang chủ
+- `https://<ten-project>.vercel.app/` — trang chủ (có câu nói của ngày)
 - `/kiem-ket.html` — Kiểm Két
 - `/ngay.html` — Ngày
 - `/vi-ca-nhan.html` — Ví Cá Nhân
 - `/tinh-lai.html` — Tính Lãi Huyền Thọ
+
+## Câu nói của ngày (/api/quote)
+
+Mỗi trang hiển thị một "câu nói của ngày" lấy từ database Notion
+**📌 Câu Nói Hay (CEO & Tỷ Phú)** (nằm dưới trang Smith's life).
+- Mỗi ngày hiện một câu, xoay vòng theo thứ tự tạo — thêm câu mới vào Notion là app tự dùng.
+- Ưu tiên hiện "Bản dịch (TV)", không có thì hiện "Câu gốc"; kèm tên người nói.
+- Dùng chung NOTION_TOKEN với app Ngày. Vì database này nằm dưới trang Smith's life
+  (đã chia sẻ với integration) nên KHÔNG cần thêm bước Connections nào.
+- Kết quả được cache 1 giờ ở CDN để không gọi Notion mỗi lượt mở trang.
+
+## Thanh điều hướng
+
+Thanh 4 tab nằm cố định ở ĐÁY màn hình trên cả 4 trang app.
+Hai thanh có sẵn của app được nâng lên trên thanh tab để không che nhau:
+- Thanh "Lưu" của app Ngày (.savebar)
+- Thanh điều hướng riêng của Ví Cá Nhân (.bnav)
