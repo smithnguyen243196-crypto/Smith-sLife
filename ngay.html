@@ -13,7 +13,13 @@
     />
   </head>
   <body>
-    <div id="root"></div>
+    <style>
+.app-tabs{display:flex;background:#14241B;padding-top:env(safe-area-inset-top);font-family:'Be Vietnam Pro',system-ui,sans-serif;}
+.app-tabs a{flex:1;text-align:center;padding:11px 4px 9px;font-size:12.5px;font-weight:600;color:#9DB5A6;text-decoration:none;border-bottom:2.5px solid transparent;white-space:nowrap;-webkit-tap-highlight-color:transparent;}
+.app-tabs a.on{color:#FFFFFF;border-bottom-color:#E8913A;}
+</style>
+<nav class="app-tabs"><a href="/kiem-ket.html">Kiểm Két</a><a href="/vi-ca-nhan.html">Ví</a><a href="/ngay.html" class="on">Ngày</a><a href="/tinh-lai.html">Tính Lãi</a></nav>
+<div id="root"></div>
     <a href="/" title="Về trang chủ" style="position:fixed;right:0;top:50%;transform:translateY(-50%);z-index:9999;background:rgba(36,30,23,.45);width:32px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px 0 0 12px;text-decoration:none;font-size:15px;backdrop-filter:blur(4px)">🏠</a>
     <script type="module" src="/src/ngay/main.jsx"></script>
   </body>
