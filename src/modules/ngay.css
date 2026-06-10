@@ -1,0 +1,237 @@
+/* App Ngày — scoped vào .pg-ngay */
+.pg-ngay { min-height: 100vh; }
+.pg-ngay {
+  --ink: #241e17;
+  --ink-soft: #6b6157;
+  --paper: #fcf8f1;
+  --card: #ffffff;
+  --line: #ece1d1;
+  --sun: #e8913a;
+  --sun-deep: #c9742a;
+  --paddy: #5b8c4a;
+  --paddy-soft: #eef3e9;
+  --dusk: #3b4a6b;
+  --display: 'Bricolage Grotesque', system-ui, sans-serif;
+  --body: 'Be Vietnam Pro', system-ui, sans-serif;
+}
+.pg-ngay * { box-sizing: border-box; }
+.pg-ngay { margin: 0; padding: 0; }
+.pg-ngay {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--body);
+  -webkit-font-smoothing: antialiased;
+  line-height: 1.5;
+}
+.pg-ngay .wrap {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 28px 18px 140px;
+}
+.pg-ngay .head { text-align: center; padding: 14px 0 6px; }
+.pg-ngay .eyebrow {
+  font-family: var(--body);
+  font-size: 13px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--sun-deep);
+  font-weight: 600;
+}
+.pg-ngay .date {
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: clamp(30px, 8vw, 42px);
+  line-height: 1.05;
+  margin: 6px 0 4px;
+  letter-spacing: -0.02em;
+}
+.pg-ngay .note {
+  font-size: 13px;
+  color: var(--paddy);
+  margin: 4px 0 0;
+}
+.pg-ngay .habit-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin: 8px auto 0;
+  padding: 5px 13px 5px 11px;
+  background: var(--paddy-soft);
+  border: 1px solid #cfe0c4;
+  border-radius: 999px;
+  font-size: 13.5px;
+  color: var(--ink-soft);
+  letter-spacing: 0.01em;
+}
+.pg-ngay .habit-pill strong { color: var(--paddy); font-weight: 700; }
+.pg-ngay .habit-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--paddy); }
+.pg-ngay .arc { width: min(280px, 80%); height: auto; margin: 6px auto 0; display: block; overflow: visible; }
+.pg-ngay .arc-track { fill: none; stroke: var(--line); stroke-width: 9; stroke-linecap: round; }
+.pg-ngay .arc-fill {
+  fill: none;
+  stroke: var(--sun);
+  stroke-width: 9;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.pg-ngay .arc-sun { fill: var(--sun); transition: cx 0.7s cubic-bezier(0.22, 1, 0.36, 1), cy 0.7s cubic-bezier(0.22, 1, 0.36, 1); filter: drop-shadow(0 0 6px rgba(232,145,58,0.5)); }
+.pg-ngay .arc-num { font-family: var(--display); font-weight: 700; font-size: 30px; fill: var(--ink); text-anchor: middle; }
+.pg-ngay .arc-den { font-size: 17px; fill: var(--ink-soft); }
+.pg-ngay .arc-cap { font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; fill: var(--ink-soft); text-anchor: middle; }
+.pg-ngay .block {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 18px 16px;
+  margin-top: 16px;
+}
+.pg-ngay .block-head { margin-bottom: 12px; }
+.pg-ngay .block-kicker {
+  display: block;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  font-weight: 600;
+}
+.pg-ngay .block-head h2, .pg-ngay .collapse h2 {
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 21px;
+  margin: 2px 0 0;
+  letter-spacing: -0.01em;
+}
+.pg-ngay .tasks { list-style: none; margin: 0; padding: 0; }
+.pg-ngay .tasks li + li { margin-top: 8px; }
+.pg-ngay .task {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  padding: 12px 14px;
+  cursor: pointer;
+  font: inherit;
+  color: var(--ink);
+  text-align: left;
+  transition: background 0.18s, border-color 0.18s, transform 0.06s;
+}
+.pg-ngay .task:active { transform: scale(0.99); }
+.pg-ngay .task:hover { border-color: #d9cbb5; }
+.pg-ngay .task.on { background: var(--paddy-soft); border-color: #cfe0c4; }
+.pg-ngay .task-emoji { font-size: 19px; width: 24px; text-align: center; }
+.pg-ngay .task-label { flex: 1; font-size: 15px; font-weight: 500; }
+.pg-ngay .task.on .task-label { color: var(--paddy); }
+.pg-ngay .task-box {
+  width: 26px; height: 26px; flex: none;
+  border: 2px solid var(--line);
+  border-radius: 8px;
+  display: grid; place-items: center;
+  transition: background 0.18s, border-color 0.18s;
+}
+.pg-ngay .task-box svg { width: 16px; height: 16px; fill: none; stroke: #fff; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 24; stroke-dashoffset: 24; transition: stroke-dashoffset 0.25s; }
+.pg-ngay .task.on .task-box { background: var(--paddy); border-color: var(--paddy); }
+.pg-ngay .task.on .task-box svg { stroke-dashoffset: 0; }
+.pg-ngay .task:disabled { opacity: 0.55; cursor: wait; }
+.pg-ngay .qs { margin-top: 14px; }
+.pg-ngay .q { margin-top: 14px; }
+.pg-ngay .qs .q:first-child, .pg-ngay .q:first-child { margin-top: 0; }
+.pg-ngay .q label { display: block; font-weight: 600; font-size: 15px; margin-bottom: 2px; }
+.pg-ngay .q-hint { margin: 0 0 6px; font-size: 12.5px; color: var(--ink-soft); }
+.pg-ngay textarea {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  padding: 10px 12px;
+  font: inherit;
+  font-size: 15px;
+  color: var(--ink);
+  background: #fffdf9;
+  resize: vertical;
+  min-height: 44px;
+}
+.pg-ngay textarea:focus, .pg-ngay input:focus { outline: 2px solid var(--sun); outline-offset: 1px; border-color: transparent; }
+.pg-ngay textarea::placeholder { color: #b7ac9c; }
+.pg-ngay .collapse {
+  width: 100%; background: none; border: none; padding: 0; cursor: pointer;
+  display: grid; grid-template-columns: 1fr auto; align-items: center; text-align: left; font: inherit; color: var(--ink);
+}
+.pg-ngay .collapse .block-kicker { grid-column: 1; }
+.pg-ngay .collapse h2 { grid-column: 1; }
+.pg-ngay .chev { grid-row: 1 / span 2; grid-column: 2; font-size: 22px; color: var(--ink-soft); transition: transform 0.2s; }
+.pg-ngay .chev.open { transform: rotate(180deg); }
+.pg-ngay .metrics { margin-top: 14px; }
+.pg-ngay .m-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 9px 0; border-top: 1px solid var(--line); }
+.pg-ngay .m-row label { font-size: 14.5px; font-weight: 500; }
+.pg-ngay .m-row input { width: 120px; border: 1px solid var(--line); border-radius: 9px; padding: 8px 10px; font: inherit; font-size: 15px; background: #fffdf9; text-align: right; }
+.pg-ngay .m-row.ro span { color: var(--ink-soft); font-weight: 600; }
+.pg-ngay .todo-add { display: flex; gap: 8px; margin-bottom: 12px; }
+.pg-ngay .todo-add input {
+  flex: 1; min-width: 0;
+  border: 1px solid var(--line); border-radius: 11px;
+  padding: 11px 13px; font: inherit; font-size: 15px; background: #fffdf9;
+}
+.pg-ngay .btn.small { padding: 11px 16px; border-radius: 11px; }
+.pg-ngay .todos { list-style: none; margin: 0; padding: 0; }
+.pg-ngay .todos li + li { margin-top: 7px; }
+.pg-ngay .todo {
+  display: flex; align-items: center; gap: 11px;
+  border: 1px solid var(--line); border-radius: 12px;
+  padding: 10px 8px 10px 12px;
+  transition: background 0.18s, border-color 0.18s;
+}
+.pg-ngay .todo.done { background: var(--paddy-soft); border-color: #cfe0c4; }
+.pg-ngay .todo-check {
+  width: 24px; height: 24px; flex: none; cursor: pointer;
+  border: 2px solid var(--line); border-radius: 7px; background: transparent;
+  display: grid; place-items: center; padding: 0;
+  transition: background 0.18s, border-color 0.18s;
+}
+.pg-ngay .todo-check svg { width: 15px; height: 15px; fill: none; stroke: #fff; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 24; stroke-dashoffset: 24; transition: stroke-dashoffset 0.25s; }
+.pg-ngay .todo.done .todo-check { background: var(--paddy); border-color: var(--paddy); }
+.pg-ngay .todo.done .todo-check svg { stroke-dashoffset: 0; }
+.pg-ngay .todo-name { flex: 1; font-size: 15px; }
+.pg-ngay .todo.done .todo-name { color: var(--ink-soft); text-decoration: line-through; }
+.pg-ngay .todo-del {
+  flex: none; width: 30px; height: 30px; border: none; background: transparent;
+  color: #c4b7a4; font-size: 22px; line-height: 1; cursor: pointer; border-radius: 8px;
+}
+.pg-ngay .todo-del:hover { background: #f3ece0; color: #b3402e; }
+.pg-ngay .todo-empty { font-size: 14px; color: var(--ink-soft); padding: 4px 2px; }
+.pg-ngay .inline-err.small { font-size: 13px; margin-top: 10px; }
+.pg-ngay .open-notion { display: inline-block; margin: 16px 4px 0; font-size: 14px; color: var(--dusk); text-decoration: none; font-weight: 500; }
+.pg-ngay .open-notion:hover { text-decoration: underline; }
+.pg-ngay .savebar {
+  position: fixed; left: 0; right: 0; bottom: 0;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 12px 18px calc(12px + env(safe-area-inset-bottom));
+  background: rgba(252,248,241,0.92);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid var(--line);
+  max-width: 600px; margin: 0 auto;
+}
+.pg-ngay .save-status { font-size: 13.5px; color: var(--ink-soft); }
+.pg-ngay .savebar.active .save-status { color: var(--sun-deep); font-weight: 600; }
+.pg-ngay .btn {
+  background: var(--ink); color: #fff; border: none; border-radius: 11px;
+  padding: 11px 20px; font: inherit; font-weight: 600; font-size: 15px; cursor: pointer;
+  transition: background 0.18s, opacity 0.18s;
+}
+.pg-ngay .btn:hover { background: #000; }
+.pg-ngay .btn:disabled { opacity: 0.4; cursor: default; }
+.pg-ngay .savebar.active .btn { background: var(--sun-deep); }
+.pg-ngay .savebar.active .btn:hover { background: var(--sun); }
+.pg-ngay .loading { display: flex; align-items: center; gap: 10px; justify-content: center; padding: 80px 0; color: var(--ink-soft); }
+.pg-ngay .dot { width: 12px; height: 12px; border-radius: 50%; background: var(--sun); animation: pulse 1s infinite ease-in-out; }
+.pg-ngay .card.err { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 22px; margin-top: 30px; }
+.pg-ngay .card.err h2 { font-family: var(--display); margin-top: 0; }
+.pg-ngay .muted { color: var(--ink-soft); font-size: 14px; }
+.pg-ngay code { background: #f1e9da; padding: 1px 6px; border-radius: 5px; font-size: 13px; }
+.pg-ngay .inline-err { color: #b3402e; font-size: 14px; margin-top: 14px; }
+
+@keyframes pulse { 0%,100% { opacity: 0.3; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1.1); } }
+@media (prefers-reduced-motion: reduce) {
+.pg-ngay *, .pg-ngay .arc-fill, .pg-ngay .arc-sun, .pg-ngay .task-box svg, .pg-ngay .chev { transition: none !important; animation: none !important; }
+}
