@@ -83,6 +83,16 @@
     .t-lai .mono { background: rgba(255,255,255,.14); color: #F5C542; }
 
     footer { margin-top: 36px; text-align: center; font-size: 12.5px; color: var(--mist); letter-spacing: .4px; }
+
+    /* Câu nói của ngày */
+    .qotd {
+      margin-top: 22px; padding: 14px 16px;
+      background: var(--bg-soft); border: 1px solid rgba(255,255,255,.07);
+      border-left: 3px solid var(--sun); border-radius: 12px;
+      font-size: 14px; line-height: 1.55; color: #DCE7DE;
+    }
+    .qotd em { font-style: italic; }
+    .qotd .qotd-ai { color: var(--sun); font-style: normal; font-weight: 600; white-space: nowrap; }
   </style>
 </head>
 <body>
@@ -92,6 +102,8 @@
       <h1 id="greeting">Chào Smith</h1>
       <p class="today" id="today"></p>
     </header>
+
+    <blockquote class="qotd" id="qotd" hidden></blockquote>
 
     <nav class="shelf">
       <a class="tile t-ket" href="/kiem-ket.html">
@@ -143,6 +155,21 @@
       var thu = ['Chủ nhật', 'Thứ hai', 'Thứ ba', 'Thứ tư', 'Thứ năm', 'Thứ sáu', 'Thứ bảy'][now.getDay()];
       document.getElementById('today').innerHTML =
         '<strong>' + thu + '</strong>, ngày ' + now.getDate() + ' tháng ' + (now.getMonth() + 1) + ' năm ' + now.getFullYear();
+
+      fetch('/api/quote').then(function (r) { return r.json(); }).then(function (d) {
+        if (!d || !d.text) return;
+        var el = document.getElementById('qotd');
+        var em = document.createElement('em');
+        em.textContent = '\u201c' + d.text + '\u201d';
+        el.appendChild(em);
+        if (d.author) {
+          var sp = document.createElement('span');
+          sp.className = 'qotd-ai';
+          sp.textContent = ' \u2014 ' + d.author;
+          el.appendChild(sp);
+        }
+        el.hidden = false;
+      }).catch(function () {});
     })();
   </script>
 </body>
