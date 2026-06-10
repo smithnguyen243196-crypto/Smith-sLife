@@ -9,7 +9,7 @@ smith-apps/
 ├── ngay.html           ← App Ngày — nhật ký & nhiệm vụ (React)
 ├── public/
 │   ├── vi-ca-nhan.html ← App Ví Cá Nhân (HTML tĩnh, giữ nguyên)
-│   └── tinh-lai.html   ← App Tính Lãi Huyền Thọ (HTML tĩnh, giữ nguyên)
+│   └── tinh-lai.html   ← App Tính Lãi Huyên Thọ (HTML tĩnh, giữ nguyên)
 ├── api/                ← Toàn bộ serverless function gộp chung
 │   ├── notion.js            (app Ngày)
 │   ├── save-ket.js          (Kiểm Két → Notion)
@@ -67,7 +67,7 @@ của app như cũ.
 - `/kiem-ket.html` — Kiểm Két
 - `/ngay.html` — Ngày
 - `/vi-ca-nhan.html` — Ví Cá Nhân
-- `/tinh-lai.html` — Tính Lãi Huyền Thọ
+- `/tinh-lai.html` — Tính Lãi Huyên Thọ
 
 ## Câu nói của ngày (/api/quote)
 
