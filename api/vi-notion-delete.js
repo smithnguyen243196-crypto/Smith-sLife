@@ -1,20 +1,21 @@
-export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  if (req.method === 'OPTIONS') return res.status(200).end();
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+// api/vi-notion-delete.js — Xoá (archive) giao dịch Ví Cá Nhân (cấu hình server-first)
+import { viConfig } from "./vi-notion.js";
 
-  const { token, pageId } = req.body;
-  if (!token || !pageId) return res.status(400).json({ error: 'Thiếu token hoặc pageId' });
+export default async function handler(req, res) {
+  if (req.method !== "POST") return res.status(405).json({ error: "Chỉ chấp nhận POST" });
+
+  const { token, body } = viConfig(req.body);
+  const pageId = body.pageId;
+  if (!token) return res.status(500).json({ error: "Server thiếu VI_NOTION_TOKEN/NOTION_TOKEN" });
+  if (!pageId) return res.status(400).json({ error: "Thiếu pageId" });
 
   try {
     const r = await fetch(`https://api.notion.com/v1/pages/${pageId}`, {
-      method: 'PATCH',
+      method: "PATCH",
       headers: {
-        'Authorization': `Bearer ${token}`,
-        'Notion-Version': '2022-06-28',
-        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+        "Notion-Version": "2022-06-28",
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({ archived: true }),
     });
