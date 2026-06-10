@@ -1,0 +1,52 @@
+/* Trang chủ — scoped .pg-home */
+.pg-home {
+  background:
+    radial-gradient(110% 50% at 50% -8%, rgba(232,145,58,.10), transparent 55%),
+    #14241B;
+  color: #F0F4F0;
+  font-family: 'Be Vietnam Pro', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  line-height: 1.5;
+}
+.pg-home .home-wrap { max-width: 480px; margin: 0 auto; padding: 30px 18px 40px; }
+.pg-home .eyebrow { font-size: 12.5px; letter-spacing: 2.5px; text-transform: uppercase; color: #9DB5A6; }
+.pg-home h1 {
+  font-family: 'Bricolage Grotesque', system-ui, sans-serif; font-weight: 700;
+  font-size: clamp(30px, 8vw, 38px); line-height: 1.12;
+  margin: 6px 0 4px; color: #FBF6EC;
+}
+.pg-home .today { font-size: 14.5px; color: #9DB5A6; margin: 0; }
+.pg-home .today strong { color: #E8913A; font-weight: 600; }
+
+.pg-home .hshelf { display: flex; flex-direction: column; gap: 14px; margin-top: 28px; }
+.pg-home .htile {
+  display: flex; align-items: center; gap: 16px; width: 100%;
+  border-radius: 18px; padding: 18px;
+  border: 1px solid transparent; cursor: pointer; text-align: left;
+  font-family: inherit; font-size: inherit;
+  transition: transform .15s ease, box-shadow .15s ease;
+  min-height: 92px;
+  -webkit-tap-highlight-color: transparent;
+}
+.pg-home .htile:active { transform: scale(.985); }
+.pg-home .hmono {
+  font-family: 'Bricolage Grotesque', system-ui, sans-serif; font-weight: 700; font-size: 30px;
+  width: 54px; height: 54px; flex: none;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 14px;
+}
+.pg-home .htxt { flex: 1; min-width: 0; display: block; }
+.pg-home .htile-name { display: block; font-family: 'Bricolage Grotesque', system-ui, sans-serif; font-weight: 700; font-size: 19px; line-height: 1.2; }
+.pg-home .htile-desc { display: block; font-size: 13.5px; margin-top: 3px; opacity: .82; }
+.pg-home .hchev { margin-left: auto; flex: none; font-size: 18px; opacity: .55; }
+
+.pg-home .t-ket { background: #F4F1EA; color: #1E2A24; border-color: #E1DCD0; }
+.pg-home .t-ket .hmono { background: #E5F0EB; color: #0F6E54; }
+.pg-home .t-vi { background: #0F1520; color: #E8F0FE; border-color: #1E2D45; }
+.pg-home .t-vi .hmono { background: rgba(0,229,160,.12); color: #00E5A0; }
+.pg-home .t-ngay { background: #FCF8F1; color: #241E17; border-color: #ECE1D1; }
+.pg-home .t-ngay .hmono { background: #FAEBDA; color: #C9742A; }
+.pg-home .t-lai { background: linear-gradient(150deg, #1A8C3D, #0C4A21); color: #F1F9F3; border-color: rgba(255,255,255,.14); }
+.pg-home .t-lai .hmono { background: rgba(255,255,255,.14); color: #F5C542; }
+
+.pg-home .hfoot { margin-top: 34px; text-align: center; font-size: 12.5px; color: #9DB5A6; letter-spacing: .4px; }
