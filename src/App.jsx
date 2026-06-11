@@ -36,7 +36,7 @@ export default function App() {
 
   return (
     <div style={{ minHeight: "100vh", background: T.bg, fontFamily: FONT, color: T.text }}>
-      <div style={{ maxWidth: 460, margin: "0 auto", padding: "20px 16px 110px" }}>
+      <div style={{ maxWidth: 460, margin: "0 auto", padding: "20px 16px 110px", overflowX: "hidden" }}>
         {view === "home" && <Home quote={quote} nlpQuote={nlpQuote} now={now} go={setView} />}
         {view === "tasks" && <TasksTool quote={quote} now={now} />}
         {view === "kiemket" && <KiemKetTool quote={quote} now={now} />}
