@@ -16,8 +16,8 @@ export default function TinhLaiTool({ quote, now }) {
       <Card>
         <SectionTitle>Tính lãi</SectionTitle>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-          <div><div style={{ fontSize: 12.5, color: T.textMute, fontWeight: 600, marginBottom: 4 }}>Ngày bắt đầu</div><input type="date" value={start} onChange={(e) => setStart(e.target.value)} style={inputStyle} /></div>
-          <div><div style={{ fontSize: 12.5, color: T.textMute, fontWeight: 600, marginBottom: 4 }}>Ngày tính lãi</div><input type="date" value={end} onChange={(e) => setEnd(e.target.value)} style={inputStyle} /></div>
+          <div style={{ minWidth: 0 }}><div style={{ fontSize: 12.5, color: T.textMute, fontWeight: 600, marginBottom: 4 }}>Ngày bắt đầu</div><input type="date" value={start} onChange={(e) => setStart(e.target.value)} style={inputStyle} /></div>
+          <div style={{ minWidth: 0 }}><div style={{ fontSize: 12.5, color: T.textMute, fontWeight: 600, marginBottom: 4 }}>Ngày tính lãi</div><input type="date" value={end} onChange={(e) => setEnd(e.target.value)} style={inputStyle} /></div>
         </div>
         <div style={{ marginTop: 12, padding: "10px 14px", borderRadius: 12, background: T.primarySoft, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <span style={{ fontWeight: 700, color: T.primaryDark }}>Số ngày (tính cả 2 đầu)</span><span style={{ fontWeight: 900, fontSize: 18, color: T.primaryDark }}>{days > 0 ? days : 0} ngày</span>
