@@ -20,13 +20,15 @@ export default async function handler(req, res) {
       return json(res, 200, tasks);
     }
     if (req.method === "POST") {
-      const { name } = await readBody(req);
-      const created = await createPage(DS(), {
+      const { name, projectId } = await readBody(req);
+      const props = {
         [T.title]: { title: title(name) },
         [T.status]: { select: { name: "Hoạt Động" } },
         [T.done]: { checkbox: false },
         [T.due]: { date: { start: today() } },
-      });
+      };
+      if (projectId) props["Dự Án"] = { relation: [{ id: projectId }] };
+      const created = await createPage(DS(), props);
       return json(res, 200, { id: created.id, name, done: false });
     }
     if (req.method === "PATCH") {
