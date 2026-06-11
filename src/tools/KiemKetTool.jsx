@@ -47,7 +47,7 @@ export default function KiemKetTool({ quote, now }) {
 
   const saveNotion = async () => { setSaving(true); setSaved(false); await api.saveKiemKet({ counts, entries, startDate, endDate, kiotviet, commit: true, summary: { tongKet, netThuChi, tongKetVaThuChi, ketQua } }); setSaving(false); setSaved(true); };
 
-  const TabBtn = ({ id, label }) => (<button onClick={() => setTab(id)} style={{ flex: 1, padding: "10px 0", borderRadius: 12, border: "none", cursor: "pointer", fontFamily: "inherit", fontWeight: 800, fontSize: 14, background: tab === id ? T.primary : "transparent", color: tab === id ? "#fff" : T.textMute }}>{label}</button>);
+  const TabBtn = ({ id, label }) => (<button onClick={() => setTab(id)} style={{ flex: 1, minWidth: 0, padding: "10px 0", borderRadius: 12, border: "none", cursor: "pointer", fontFamily: "inherit", fontWeight: 800, fontSize: 14, background: tab === id ? T.primary : "transparent", color: tab === id ? "#fff" : T.textMute }}>{label}</button>);
   const Row = ({ label, value, strong, color }) => (<div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: `1px dashed ${T.border}` }}><span style={{ color: T.textMute, fontSize: 14, fontWeight: strong ? 800 : 600 }}>{label}</span><span style={{ fontWeight: strong ? 900 : 700, fontSize: strong ? 17 : 15, color: color || T.text }}>{fmt(value)} đ</span></div>);
 
   return (
@@ -78,7 +78,7 @@ export default function KiemKetTool({ quote, now }) {
         <Card>
           <SectionTitle>{editId ? "Sửa khoản" : "Nhập thu / chi"}</SectionTitle>
           <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
-            {["thu", "chi"].map((tp) => (<button key={tp} onClick={() => setForm((f) => ({ ...f, type: tp }))} style={{ flex: 1, padding: 10, borderRadius: 12, border: "none", cursor: "pointer", fontFamily: "inherit", fontWeight: 800, background: form.type === tp ? (tp === "thu" ? T.success : T.danger) : T.surfaceAlt, color: form.type === tp ? "#fff" : T.textMute }}>{tp === "thu" ? "Thu" : "Chi"}</button>))}
+            {["thu", "chi"].map((tp) => (<button key={tp} onClick={() => setForm((f) => ({ ...f, type: tp }))} style={{ flex: 1, minWidth: 0, padding: 10, borderRadius: 12, border: "none", cursor: "pointer", fontFamily: "inherit", fontWeight: 800, background: form.type === tp ? (tp === "thu" ? T.success : T.danger) : T.surfaceAlt, color: form.type === tp ? "#fff" : T.textMute }}>{tp === "thu" ? "Thu" : "Chi"}</button>))}
           </div>
           <div style={{ display: "grid", gap: 8 }}>
             <MoneyInput placeholder="Số tiền" value={form.amount} onChange={(v) => setForm((f) => ({ ...f, amount: v }))} />
@@ -124,8 +124,8 @@ export default function KiemKetTool({ quote, now }) {
         <Card>
           <SectionTitle>Kết quả kiểm két</SectionTitle>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 12 }}>
-            <div><div style={{ fontSize: 12.5, color: T.textMute, fontWeight: 600, marginBottom: 4 }}>Ngày bắt đầu</div><input type="date" value={startDate} onChange={(e) => { setStartDate(e.target.value); sync({ startDate: e.target.value }); }} style={inputStyle} /></div>
-            <div><div style={{ fontSize: 12.5, color: T.textMute, fontWeight: 600, marginBottom: 4 }}>Ngày kết két</div><input type="date" value={endDate} onChange={(e) => { setEndDate(e.target.value); sync({ endDate: e.target.value }); }} style={inputStyle} /></div>
+            <div style={{ minWidth: 0 }}><div style={{ fontSize: 12.5, color: T.textMute, fontWeight: 600, marginBottom: 4 }}>Ngày bắt đầu</div><input type="date" value={startDate} onChange={(e) => { setStartDate(e.target.value); sync({ startDate: e.target.value }); }} style={inputStyle} /></div>
+            <div style={{ minWidth: 0 }}><div style={{ fontSize: 12.5, color: T.textMute, fontWeight: 600, marginBottom: 4 }}>Ngày kết két</div><input type="date" value={endDate} onChange={(e) => { setEndDate(e.target.value); sync({ endDate: e.target.value }); }} style={inputStyle} /></div>
           </div>
           <Row label="Tổng tiền trong két" value={tongKet} />
           <Row label="Tổng thu chi (thu − chi)" value={netThuChi} color={netThuChi >= 0 ? T.success : T.danger} />
