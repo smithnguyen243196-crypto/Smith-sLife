@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { T, fmt, todayKey } from "../lib/theme.js";
-import { DENOMS, REASON_SUGGEST } from "../lib/config.js";
+import { DENOMS, REASON_SUGGEST, PERSON_SUGGEST } from "../lib/config.js";
 import { api } from "../lib/api.js";
-import { Card, SectionTitle, QuoteBar, Btn, MoneyInput, SuggestChips, inputStyle } from "../components/ui.jsx";
+import { Card, SectionTitle, QuoteBar, Btn, MoneyInput, SuggestChips, Stepper, inputStyle } from "../components/ui.jsx";
 
 export default function KiemKetTool({ quote, now }) {
   const [tab, setTab] = useState("dem");
@@ -56,9 +56,9 @@ export default function KiemKetTool({ quote, now }) {
           <SectionTitle right={<span style={{ fontWeight: 900, color: T.primary }}>{fmt(tongKet)} đ</span>}>Đếm tiền trong két</SectionTitle>
           <div style={{ display: "grid", gap: 8 }}>
             {DENOMS.map((d) => { const q = parseInt(counts[d]) || 0; return (
-              <div key={d} style={{ display: "grid", gridTemplateColumns: "1fr 84px 1.1fr", gap: 8, alignItems: "center" }}>
+              <div key={d} style={{ display: "grid", gridTemplateColumns: "1fr 130px 1.1fr", gap: 8, alignItems: "center" }}>
                 <span style={{ fontWeight: 700, fontSize: 14.5 }}>{fmt(d)}</span>
-                <input inputMode="numeric" value={counts[d]} placeholder="0" onChange={(e) => setCountsSync((p) => ({ ...p, [d]: e.target.value.replace(/\D/g, "") }))} style={{ ...inputStyle, textAlign: "center", padding: "9px 6px" }} />
+                <Stepper value={counts[d]} onChange={(v) => setCountsSync((p) => ({ ...p, [d]: v }))} />
                 <span style={{ textAlign: "right", fontWeight: 700, color: q ? T.primary : T.textMute }}>{fmt(d * q)} đ</span>
               </div>); })}
           </div>
@@ -76,9 +76,10 @@ export default function KiemKetTool({ quote, now }) {
           </div>
           <div style={{ display: "grid", gap: 8 }}>
             <MoneyInput placeholder="Số tiền" value={form.amount} onChange={(v) => setForm((f) => ({ ...f, amount: v }))} />
-            <SuggestChips items={REASON_SUGGEST} onPick={(v) => setForm((f) => ({ ...f, reason: v }))} />
+            <SuggestChips items={REASON_SUGGEST} active={form.reason} onPick={(v) => setForm((f) => ({ ...f, reason: v }))} />
             <input style={inputStyle} placeholder="Lý do thu / chi" value={form.reason} onChange={(e) => setForm((f) => ({ ...f, reason: e.target.value }))} />
             <input style={inputStyle} placeholder="Người nhận / người nộp" value={form.person} onChange={(e) => setForm((f) => ({ ...f, person: e.target.value }))} />
+            <SuggestChips items={PERSON_SUGGEST} active={form.person} onPick={(v) => setForm((f) => ({ ...f, person: v }))} />
             <div style={{ display: "flex", gap: 8 }}>
               <Btn onClick={submitEntry} variant="accent" style={{ flex: 1 }}>{editId ? "Lưu chỉnh sửa" : "Thêm khoản"}</Btn>
               {editId && <Btn onClick={() => { setEditId(null); setForm({ type: "chi", amount: "", reason: "", person: "" }); }} variant="ghost">Huỷ</Btn>}
