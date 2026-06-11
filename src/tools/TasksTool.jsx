@@ -12,6 +12,8 @@ export default function TasksTool({ quote, now }) {
   const [evening, setEvening] = useState(EVENING_Q.map(() => ""));
   const [tasks, setTasks] = useState([]);
   const [newTask, setNewTask] = useState("");
+  const [projects, setProjects] = useState([]);
+  const [projectId, setProjectId] = useState("");
 
   useEffect(() => {
     api.getNgay(dk).then((d) => {
@@ -21,14 +23,15 @@ export default function TasksTool({ quote, now }) {
       if (d.evening) setEvening(EVENING_Q.map((_, i) => d.evening[i] || ""));
     });
     api.getTasks().then((t) => Array.isArray(t) && setTasks(t));
+    api.getProjects().then((p) => Array.isArray(p) && setProjects(p));
   }, [dk]);
 
   const taskPct = tasks.length ? (tasks.filter((t) => t.done).length / tasks.length) * 100 : 0;
   const habitPct = habits.length ? (habits.filter((h) => h.done).length / habits.length) * 100 : 0;
 
   const toggleHabit = (i) => setHabits((p) => { const n = p.map((x, j) => (j === i ? { ...x, done: !x.done } : x)); api.tickHabit(dk, n[i].name, n[i].done); return n; });
-  const addTask = async () => { if (!newTask.trim()) return; const t = await api.addTask(newTask.trim()); setTasks((p) => [...p, t || { id: Date.now(), name: newTask.trim(), done: false }]); setNewTask(""); };
-  const toggleTask = (id) => setTasks((p) => { const n = p.map((t) => (t.id === id ? { ...t, done: !t.done } : t)); const t = n.find((x) => x.id === id); api.toggleTask(id, t.done); return n; });
+  const addTask = async () => { if (!newTask.trim()) return; const t = await api.addTask(newTask.trim(), projectId || undefined); setTasks((p) => [...p, t || { id: Date.now(), name: newTask.trim(), done: false }]); setNewTask(""); };
+  const toggleTask = (id) => setTasks((p) => { const n = p.map((t) => (t.id === id ? { ...t, done: !t.done } : t)); api.toggleTask(id, n.find((x) => x.id === id).done); return n; });
   const delTask = (id) => { setTasks((p) => p.filter((t) => t.id !== id)); api.deleteTask(id); };
 
   const QA = (qs, arr, set, kind) => (
@@ -37,8 +40,7 @@ export default function TasksTool({ quote, now }) {
         <div key={i}>
           <div style={{ fontSize: 13.5, fontWeight: 600, marginBottom: 5, color: T.text }}>{q}</div>
           <textarea value={arr[i]} rows={2} placeholder="..." style={{ ...inputStyle, resize: "vertical" }}
-            onChange={(e) => set((p) => p.map((x, j) => (j === i ? e.target.value : x)))}
-            onBlur={() => api.saveAnswers(dk, kind, arr)} />
+            onChange={(e) => set((p) => p.map((x, j) => (j === i ? e.target.value : x)))} onBlur={() => api.saveAnswers(dk, kind, arr)} />
         </div>
       ))}
     </div>
@@ -52,16 +54,22 @@ export default function TasksTool({ quote, now }) {
         <div style={{ fontSize: 22, fontWeight: 900, color: T.text }}>Ngày {now.getDate()} tháng {now.getMonth() + 1} năm {now.getFullYear()}</div>
         <div style={{ fontSize: 13, color: T.accent, fontWeight: 700, marginTop: 2 }}>{lunarLabel(now)}</div>
       </Card>
-      <SunArc pct={taskPct} />
+
+      {/* Mặt trời = % THÓI QUEN */}
+      <SunArc pct={habitPct} caption="thói quen hôm nay đã làm" />
+
+      {/* Thanh = % NHIỆM VỤ */}
       <Card>
-        <SectionTitle right={<span style={{ fontWeight: 900, color: T.primary }}>{Math.round(habitPct)}%</span>}>Thói Quen % (như cột @Ngày)</SectionTitle>
-        <div style={{ height: 12, borderRadius: 8, background: T.bgDeep, overflow: "hidden" }}>
-          <div style={{ height: "100%", width: `${habitPct}%`, background: `linear-gradient(90deg,${T.accent},${T.primary})`, transition: ".3s" }} />
+        <SectionTitle right={<span style={{ fontWeight: 900, color: T.primary }}>{Math.round(taskPct)}%</span>}>Hoàn thành nhiệm vụ</SectionTitle>
+        <div style={{ height: 14, borderRadius: 8, background: T.bgDeep, overflow: "hidden" }}>
+          <div style={{ height: "100%", width: `${taskPct}%`, background: `linear-gradient(90deg,${T.accent},${T.primary})`, transition: ".3s" }} />
         </div>
       </Card>
+
       <Collapsible title="🌅 Câu hỏi đầu ngày">{QA(MORNING_Q, morning, setMorning, "morning")}</Collapsible>
+
       <Card>
-        <SectionTitle>Thói quen mỗi ngày · @Ngày</SectionTitle>
+        <SectionTitle right={<span style={{ fontWeight: 900, color: T.primary }}>{Math.round(habitPct)}%</span>}>Thói quen mỗi ngày · @Ngày</SectionTitle>
         <div style={{ display: "grid", gap: 8 }}>
           {habits.map((h, i) => (
             <label key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 12px", borderRadius: 12, background: h.done ? T.primarySoft : T.surfaceAlt, cursor: "pointer", border: `1px solid ${T.border}` }}>
@@ -71,8 +79,15 @@ export default function TasksTool({ quote, now }) {
           ))}
         </div>
       </Card>
+
       <Card>
         <SectionTitle>Nhiệm vụ · @Nhiệm Vụ</SectionTitle>
+        {projects.length > 0 && (
+          <select value={projectId} onChange={(e) => setProjectId(e.target.value)} style={{ ...inputStyle, marginBottom: 8 }}>
+            <option value="">— Không gắn dự án —</option>
+            {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+          </select>
+        )}
         <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
           <input value={newTask} onChange={(e) => setNewTask(e.target.value)} onKeyDown={(e) => e.key === "Enter" && addTask()} placeholder="Thêm nhiệm vụ..." style={inputStyle} />
           <Btn onClick={addTask} variant="accent">＋</Btn>
@@ -88,6 +103,7 @@ export default function TasksTool({ quote, now }) {
           ))}
         </div>
       </Card>
+
       <Collapsible title="🌙 Câu hỏi cuối ngày">{QA(EVENING_Q, evening, setEvening, "evening")}</Collapsible>
     </div>
   );
