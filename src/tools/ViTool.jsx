@@ -15,7 +15,7 @@ export default function ViTool({ quote }) {
   const add = async () => { const amt = parseFloat(form.amount); if (!amt) return; const base = { ...form, amount: amt, date: todayKey() }; const saved = await api.addVi(base); setTxs((p) => [saved || { id: Date.now(), ...base }, ...p]); setForm({ type: form.type, account: form.account, amount: "", category: form.category, note: "" }); };
   const del = (id) => { setTxs((p) => p.filter((x) => x.id !== id)); api.deleteVi(id); };
 
-  const Pill = ({ label, active, onClick }) => (<button onClick={onClick} style={{ flex: 1, padding: 9, borderRadius: 10, border: "none", cursor: "pointer", fontFamily: "inherit", fontWeight: 800, fontSize: 13.5, background: active ? T.primary : T.surfaceAlt, color: active ? "#fff" : T.textMute }}>{label}</button>);
+  const Pill = ({ label, active, onClick }) => (<button onClick={onClick} style={{ flex: 1, minWidth: 0, padding: 9, borderRadius: 10, border: "none", cursor: "pointer", fontFamily: "inherit", fontWeight: 800, fontSize: 13.5, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", background: active ? T.primary : T.surfaceAlt, color: active ? "#fff" : T.textMute }}>{label}</button>);
   return (
     <div style={{ display: "grid", gap: 14 }}>
       <QuoteBar quote={quote} />
@@ -23,8 +23,8 @@ export default function ViTool({ quote }) {
         <div style={{ fontSize: 12.5, opacity: .8, fontWeight: 700 }}>TỔNG TÀI SẢN</div>
         <div style={{ fontSize: 30, fontWeight: 900 }}>{fmt(total)} đ</div>
         <div style={{ display: "flex", gap: 10, marginTop: 12 }}>
-          <div style={{ flex: 1, background: "rgba(255,255,255,.14)", borderRadius: 12, padding: "10px 12px" }}><div style={{ fontSize: 12, opacity: .8 }}>🏦 Ngân hàng</div><div style={{ fontWeight: 800, fontSize: 16 }}>{fmt(bank)} đ</div></div>
-          <div style={{ flex: 1, background: "rgba(255,255,255,.14)", borderRadius: 12, padding: "10px 12px" }}><div style={{ fontSize: 12, opacity: .8 }}>💵 Tiền mặt</div><div style={{ fontWeight: 800, fontSize: 16 }}>{fmt(cash)} đ</div></div>
+          <div style={{ flex: 1, minWidth: 0, background: "rgba(255,255,255,.14)", borderRadius: 12, padding: "10px 12px" }}><div style={{ fontSize: 12, opacity: .8 }}>🏦 Ngân hàng</div><div style={{ fontWeight: 800, fontSize: 16 }}>{fmt(bank)} đ</div></div>
+          <div style={{ flex: 1, minWidth: 0, background: "rgba(255,255,255,.14)", borderRadius: 12, padding: "10px 12px" }}><div style={{ fontSize: 12, opacity: .8 }}>💵 Tiền mặt</div><div style={{ fontWeight: 800, fontSize: 16 }}>{fmt(cash)} đ</div></div>
         </div>
       </Card>
       <Card>
