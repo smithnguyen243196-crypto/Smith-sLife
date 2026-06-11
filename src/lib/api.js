@@ -6,6 +6,8 @@ async function j(url, opts) {
 }
 export const api = {
   getQuotes: () => j("/api/quotes").catch(() => []),
+  getNlpQuotes: () => j("/api/quotes?topic=nlp").catch(() => []),
+  getProjects: () => j("/api/projects").catch(() => []),
 
   // @Ngày
   getNgay: (date) => j(`/api/ngay?date=${date}`).catch(() => null),
@@ -14,7 +16,7 @@ export const api = {
 
   // @Nhiệm Vụ
   getTasks: () => j("/api/tasks").catch(() => []),
-  addTask: (name) => j("/api/tasks", { method: "POST", body: JSON.stringify({ name }) }).catch(() => null),
+  addTask: (name, projectId) => j("/api/tasks", { method: "POST", body: JSON.stringify({ name, projectId }) }).catch(() => null),
   toggleTask: (id, done) => j("/api/tasks", { method: "PATCH", body: JSON.stringify({ id, done }) }).catch(() => null),
   deleteTask: (id) => j(`/api/tasks?id=${id}`, { method: "DELETE" }).catch(() => null),
 
