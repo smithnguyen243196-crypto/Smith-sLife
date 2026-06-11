@@ -13,7 +13,7 @@ export const Btn = ({ children, onClick, variant = "primary", style, disabled })
   const s = { primary: { background: T.primary, color: "#fff" }, accent: { background: T.accent, color: "#3a2c06" }, ghost: { background: "transparent", color: T.primary, border: `1.5px solid ${T.border}` }, danger: { background: T.dangerSoft, color: T.danger } }[variant];
   return <button onClick={onClick} disabled={disabled} style={{ padding: "10px 14px", borderRadius: 12, border: "none", fontWeight: 700, fontSize: 14, cursor: disabled ? "default" : "pointer", opacity: disabled ? .55 : 1, fontFamily: FONT, ...s, ...style }}>{children}</button>;
 };
-export const inputStyle = { width: "100%", padding: "11px 12px", borderRadius: 12, border: `1.5px solid ${T.border}`, fontSize: 15, fontFamily: FONT, outline: "none", background: T.surfaceAlt, color: T.text, boxSizing: "border-box" };
+export const inputStyle = { width: "100%", minWidth: 0, maxWidth: "100%", padding: "11px 12px", borderRadius: 12, border: `1.5px solid ${T.border}`, fontSize: 15, fontFamily: FONT, outline: "none", background: T.surfaceAlt, color: T.text, boxSizing: "border-box" };
 
 export function MoneyInput({ value, onChange, placeholder }) {
   const display = value ? Number(value).toLocaleString("vi-VN") : "";
