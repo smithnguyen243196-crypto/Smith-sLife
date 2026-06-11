@@ -7,7 +7,8 @@ import { Card, SectionTitle, QuoteBar, Btn, MoneyInput, SuggestChips, Stepper, i
 
 // định dạng & lấy thời điểm hiện tại cho input datetime-local
 const nowLocal = () => { const d = new Date(); const z = new Date(d.getTime() - d.getTimezoneOffset() * 60000); return z.toISOString().slice(0, 16); };
-const fmtDateTime = (iso) => { if (!iso) return ""; const d = new Date(iso); if (isNaN(d)) return ""; return d.toLocaleString("vi-VN", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }); };
+const p2 = (n) => String(n).padStart(2, "0");
+const fmtDateTime = (iso) => { if (!iso) return ""; const d = new Date(iso); if (isNaN(d)) return ""; return `${p2(d.getHours())}:${p2(d.getMinutes())} ${p2(d.getDate())}/${p2(d.getMonth() + 1)}/${String(d.getFullYear()).slice(-2)}`; };
 
 export default function KiemKetTool({ quote, now }) {
   const [tab, setTab] = useState("dem");
@@ -100,9 +101,12 @@ export default function KiemKetTool({ quote, now }) {
             {entries.map((e) => (
               <div key={e.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 12, background: editId === e.id ? T.accentSoft : T.surfaceAlt, border: `1px solid ${T.border}` }}>
                 <span style={{ width: 8, height: 36, borderRadius: 4, background: e.type === "thu" ? T.success : T.danger }} />
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: 700, fontSize: 14.5 }}>{e.reason || (e.type === "thu" ? "Khoản thu" : "Khoản chi")}</div>
-                  <div style={{ fontSize: 12.5, color: T.textMute }}>{fmtDateTime(e.time)}{e.person ? ` · ${e.person}` : ""}</div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 8 }}>
+                    <span style={{ fontWeight: 700, fontSize: 14.5, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{e.reason || (e.type === "thu" ? "Khoản thu" : "Khoản chi")}</span>
+                    {e.person && <span style={{ fontSize: 13, fontWeight: 600, color: T.soil, whiteSpace: "nowrap" }}>{e.person}</span>}
+                  </div>
+                  <div style={{ fontSize: 12.5, color: T.textMute, marginTop: 2 }}>{fmtDateTime(e.time)}</div>
                 </div>
                 <span style={{ fontWeight: 800, color: e.type === "thu" ? T.success : T.danger }}>{e.type === "thu" ? "+" : "−"}{fmt(e.amount)}</span>
                 <button onClick={() => editEntry(e)} title="Sửa" style={{ border: "none", background: "transparent", color: T.primary, cursor: "pointer", fontSize: 16 }}>✏️</button>
