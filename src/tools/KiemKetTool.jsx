@@ -4,11 +4,16 @@ import { DENOMS, REASON_SUGGEST, PERSON_SUGGEST } from "../lib/config.js";
 import { api } from "../lib/api.js";
 import { Card, SectionTitle, QuoteBar, Btn, MoneyInput, SuggestChips, Stepper, inputStyle } from "../components/ui.jsx";
 
+
+// định dạng & lấy thời điểm hiện tại cho input datetime-local
+const nowLocal = () => { const d = new Date(); const z = new Date(d.getTime() - d.getTimezoneOffset() * 60000); return z.toISOString().slice(0, 16); };
+const fmtDateTime = (iso) => { if (!iso) return ""; const d = new Date(iso); if (isNaN(d)) return ""; return d.toLocaleString("vi-VN", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }); };
+
 export default function KiemKetTool({ quote, now }) {
   const [tab, setTab] = useState("dem");
   const [counts, setCounts] = useState(Object.fromEntries(DENOMS.map((d) => [d, ""])));
   const [entries, setEntries] = useState([]);
-  const [form, setForm] = useState({ type: "chi", amount: "", reason: "", person: "" });
+  const [form, setForm] = useState({ type: "chi", amount: "", reason: "", person: "", time: nowLocal() });
   const [editId, setEditId] = useState(null);
   const [startDate, setStartDate] = useState(todayKey(now));
   const [endDate, setEndDate] = useState(todayKey(now));
@@ -33,11 +38,11 @@ export default function KiemKetTool({ quote, now }) {
 
   const submitEntry = () => {
     const amt = parseFloat(form.amount); if (!amt) return;
-    if (editId) setEntriesSync((p) => p.map((e) => (e.id === editId ? { ...e, type: form.type, amount: amt, reason: form.reason, person: form.person } : e)));
-    else setEntriesSync((p) => [...p, { id: Date.now(), type: form.type, amount: amt, reason: form.reason, person: form.person }]);
-    setEditId(null); setForm({ type: form.type, amount: "", reason: "", person: "" });
+    if (editId) setEntriesSync((p) => p.map((e) => (e.id === editId ? { ...e, type: form.type, amount: amt, reason: form.reason, person: form.person, time: form.time } : e)));
+    else setEntriesSync((p) => [...p, { id: Date.now(), type: form.type, amount: amt, reason: form.reason, person: form.person, time: form.time }]);
+    setEditId(null); setForm({ type: form.type, amount: "", reason: "", person: "", time: nowLocal() });
   };
-  const editEntry = (e) => { setEditId(e.id); setForm({ type: e.type, amount: String(e.amount), reason: e.reason, person: e.person }); setTab("thuchi"); };
+  const editEntry = (e) => { setEditId(e.id); setForm({ type: e.type, amount: String(e.amount), reason: e.reason, person: e.person, time: e.time || nowLocal() }); setTab("thuchi"); };
 
   const saveNotion = async () => { setSaving(true); setSaved(false); await api.saveKiemKet({ counts, entries, startDate, endDate, kiotviet, commit: true, summary: { tongKet, netThuChi, tongKetVaThuChi, ketQua } }); setSaving(false); setSaved(true); };
 
@@ -80,9 +85,11 @@ export default function KiemKetTool({ quote, now }) {
             <input style={inputStyle} placeholder="Lý do thu / chi" value={form.reason} onChange={(e) => setForm((f) => ({ ...f, reason: e.target.value }))} />
             <input style={inputStyle} placeholder="Người nhận / người nộp" value={form.person} onChange={(e) => setForm((f) => ({ ...f, person: e.target.value }))} />
             <SuggestChips items={PERSON_SUGGEST} active={form.person} onPick={(v) => setForm((f) => ({ ...f, person: v }))} />
+            <div style={{ fontSize: 12.5, color: T.textMute, fontWeight: 600 }}>Ngày giờ</div>
+            <input type="datetime-local" value={form.time} onChange={(e) => setForm((f) => ({ ...f, time: e.target.value }))} style={inputStyle} />
             <div style={{ display: "flex", gap: 8 }}>
               <Btn onClick={submitEntry} variant="accent" style={{ flex: 1 }}>{editId ? "Lưu chỉnh sửa" : "Thêm khoản"}</Btn>
-              {editId && <Btn onClick={() => { setEditId(null); setForm({ type: "chi", amount: "", reason: "", person: "" }); }} variant="ghost">Huỷ</Btn>}
+              {editId && <Btn onClick={() => { setEditId(null); setForm({ type: "chi", amount: "", reason: "", person: "", time: nowLocal() }); }} variant="ghost">Huỷ</Btn>}
             </div>
           </div>
         </Card>
@@ -95,7 +102,7 @@ export default function KiemKetTool({ quote, now }) {
                 <span style={{ width: 8, height: 36, borderRadius: 4, background: e.type === "thu" ? T.success : T.danger }} />
                 <div style={{ flex: 1 }}>
                   <div style={{ fontWeight: 700, fontSize: 14.5 }}>{e.reason || (e.type === "thu" ? "Khoản thu" : "Khoản chi")}</div>
-                  <div style={{ fontSize: 12.5, color: T.textMute }}>{e.person || "—"}</div>
+                  <div style={{ fontSize: 12.5, color: T.textMute }}>{fmtDateTime(e.time)}{e.person ? ` · ${e.person}` : ""}</div>
                 </div>
                 <span style={{ fontWeight: 800, color: e.type === "thu" ? T.success : T.danger }}>{e.type === "thu" ? "+" : "−"}{fmt(e.amount)}</span>
                 <button onClick={() => editEntry(e)} title="Sửa" style={{ border: "none", background: "transparent", color: T.primary, cursor: "pointer", fontSize: 16 }}>✏️</button>
