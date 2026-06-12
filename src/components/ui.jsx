@@ -5,8 +5,9 @@ export const Card = ({ children, style, ...p }) => (
   <div {...p} style={{ background: T.surface, borderRadius: 18, boxShadow: T.shadowSm, border: `1px solid ${T.border}`, padding: 16, ...style }}>{children}</div>
 );
 export const SectionTitle = ({ children, right }) => (
-  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-    <span style={{ fontSize: 13, fontWeight: 800, letterSpacing: ".06em", textTransform: "uppercase", color: T.primary }}>{children}</span>{right}
+  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 10, minWidth: 0 }}>
+    <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: 13, fontWeight: 800, letterSpacing: ".06em", textTransform: "uppercase", color: T.primary }}>{children}</span>
+    {right && <span style={{ flexShrink: 0, whiteSpace: "nowrap" }}>{right}</span>}
   </div>
 );
 export const Btn = ({ children, onClick, variant = "primary", style, disabled }) => {
