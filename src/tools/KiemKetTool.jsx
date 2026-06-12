@@ -102,15 +102,15 @@ export default function KiemKetTool({ quote, now }) {
               <div key={e.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 12, background: editId === e.id ? T.accentSoft : T.surfaceAlt, border: `1px solid ${T.border}` }}>
                 <span style={{ width: 8, height: 36, borderRadius: 4, background: e.type === "thu" ? T.success : T.danger }} />
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 8 }}>
-                    <span style={{ fontWeight: 700, fontSize: 14.5, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{e.reason || (e.type === "thu" ? "Khoản thu" : "Khoản chi")}</span>
-                    {e.person && <span style={{ fontSize: 13, fontWeight: 600, color: T.soil, whiteSpace: "nowrap" }}>{e.person}</span>}
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 8, minWidth: 0 }}>
+                    <span style={{ flex: "1 1 auto", minWidth: 0, fontWeight: 700, fontSize: 14.5, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{e.reason || (e.type === "thu" ? "Khoản thu" : "Khoản chi")}</span>
+                    {e.person && <span style={{ flexShrink: 0, fontSize: 13, fontWeight: 600, color: T.soil, whiteSpace: "nowrap" }}>{e.person}</span>}
                   </div>
                   <div style={{ fontSize: 12.5, color: T.textMute, marginTop: 2 }}>{fmtDateTime(e.time)}</div>
                 </div>
-                <span style={{ fontWeight: 800, color: e.type === "thu" ? T.success : T.danger }}>{e.type === "thu" ? "+" : "−"}{fmt(e.amount)}</span>
-                <button onClick={() => editEntry(e)} title="Sửa" style={{ border: "none", background: "transparent", color: T.primary, cursor: "pointer", fontSize: 16 }}>✏️</button>
-                <button onClick={() => setEntriesSync((p) => p.filter((x) => x.id !== e.id))} style={{ border: "none", background: "transparent", color: T.danger, cursor: "pointer", fontWeight: 800 }}>✕</button>
+                <span style={{ flexShrink: 0, fontWeight: 800, whiteSpace: "nowrap", color: e.type === "thu" ? T.success : T.danger }}>{e.type === "thu" ? "+" : "−"}{fmt(e.amount)}</span>
+                <button onClick={() => editEntry(e)} title="Sửa" style={{ flexShrink: 0, border: "none", background: "transparent", color: T.primary, cursor: "pointer", fontSize: 16 }}>✏️</button>
+                <button onClick={() => setEntriesSync((p) => p.filter((x) => x.id !== e.id))} style={{ flexShrink: 0, border: "none", background: "transparent", color: T.danger, cursor: "pointer", fontWeight: 800 }}>✕</button>
               </div>
             ))}
           </div>
