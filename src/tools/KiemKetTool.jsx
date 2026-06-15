@@ -47,6 +47,17 @@ export default function KiemKetTool({ quote, now }) {
 
   const saveNotion = async () => { setSaving(true); setSaved(false); await api.saveKiemKet({ counts, entries, startDate, endDate, kiotviet, commit: true, summary: { tongKet, netThuChi, tongKetVaThuChi, ketQua } }); setSaving(false); setSaved(true); };
 
+  const resetAll = () => {
+    if (!window.confirm("Xoá hết dữ liệu kiểm két hiện tại và bắt đầu phiên mới?")) return;
+    const c = Object.fromEntries(DENOMS.map((d) => [d, ""]));
+    const t = todayKey(now);
+    setCounts(c); setEntries([]); setStartDate(t); setEndDate(t); setKiotviet(""); setEditId(null);
+    setForm({ type: "chi", amount: "", reason: "", person: "", time: nowLocal() });
+    setSaved(false);
+    api.saveKiemKet({ counts: c, entries: [], startDate: t, endDate: t, kiotviet: "" });
+    setTab("dem");
+  };
+
   const TabBtn = ({ id, label }) => (<button onClick={() => setTab(id)} style={{ flex: 1, minWidth: 0, padding: "10px 0", borderRadius: 12, border: "none", cursor: "pointer", fontFamily: "inherit", fontWeight: 800, fontSize: 14, background: tab === id ? T.primary : "transparent", color: tab === id ? "#fff" : T.textMute }}>{label}</button>);
   const Row = ({ label, value, strong, color }) => (<div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: `1px dashed ${T.border}` }}><span style={{ color: T.textMute, fontSize: 14, fontWeight: strong ? 800 : 600 }}>{label}</span><span style={{ fontWeight: strong ? 900 : 700, fontSize: strong ? 17 : 15, color: color || T.text }}>{fmt(value)} đ</span></div>);
 
@@ -137,6 +148,7 @@ export default function KiemKetTool({ quote, now }) {
             <div style={{ fontSize: 28, fontWeight: 900, color: ketQua >= 0 ? T.primaryDark : T.danger }}>{fmt(ketQua)} đ</div>
           </div>
           <Btn onClick={saveNotion} disabled={saving} style={{ width: "100%", marginTop: 14 }}>{saving ? "Đang lưu..." : saved ? "✓ Đã lưu vào @Kiểm Két" : "Lưu vào Notion @Kiểm Két"}</Btn>
+          <Btn onClick={resetAll} variant="danger" style={{ width: "100%", marginTop: 10 }}>↺ Reset · bắt đầu phiên mới</Btn>
         </Card>
       )}
     </div>
