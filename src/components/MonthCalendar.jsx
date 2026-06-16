@@ -33,7 +33,7 @@ export default function MonthCalendar({ now, compact, cell, tasks = [] }) {
   const goToday = () => { setVy(now.getFullYear()); setVm(now.getMonth()); };
 
   const navBtn = { width: 30, height: 30, borderRadius: 9, border: `1px solid ${T.line}`, background: T.surfaceAlt, color: T.ink, cursor: "pointer", display: "grid", placeItems: "center", fontFamily: FONT };
-  const cellH = cell || (compact ? 44 : 50);
+  const cellH = cell || (compact ? 48 : 54);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
@@ -67,15 +67,13 @@ export default function MonthCalendar({ now, compact, cell, tasks = [] }) {
           const key = `${vy}-${p2(vm + 1)}-${p2(d)}`;
           const dots = [...new Set(dotsByDay[key] || [])].slice(0, 4);
           return (
-            <div key={idx} style={{ position: "relative", height: cellH, borderRadius: 11, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", lineHeight: 1, gap: 2,
+            <div key={idx} style={{ height: cellH, borderRadius: 11, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", lineHeight: 1, gap: 2,
               background: today ? T.inkSoft : "transparent", border: today ? `1.5px solid ${T.ink}` : "1.5px solid transparent" }}>
               <span style={{ fontSize: 14.5, fontWeight: today ? 900 : 700, color: today ? T.inkDeep : sun ? T.danger : T.text }}>{d}</span>
               <span style={{ fontSize: 10, fontWeight: lunarHi ? 800 : 600, color: lunarHi ? T.grainDeep : T.faint }}>{lunarTxt}</span>
-              {dots.length > 0 && (
-                <div style={{ position: "absolute", bottom: 4, left: 0, right: 0, display: "flex", justifyContent: "center", gap: 2.5 }}>
-                  {dots.map((c, i) => <span key={i} style={{ width: 5, height: 5, borderRadius: "50%", background: c }} />)}
-                </div>
-              )}
+              <div style={{ height: 6, marginTop: 4, display: "flex", justifyContent: "center", gap: 2.5 }}>
+                {dots.map((c, i) => <span key={i} style={{ width: 5, height: 5, borderRadius: "50%", background: c }} />)}
+              </div>
             </div>
           );
         })}
