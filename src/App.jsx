@@ -36,6 +36,16 @@ export default function App() {
   const [nlp, setNlp] = useState(FALLBACK_NLP);
   const [links, setLinks] = useState({ version: LINKS_VERSION, retailer: DEFAULT_RETAILER, items: DEFAULT_LINKS });
   const isDesktop = useMediaQuery(`(min-width:${DESKTOP}px)`);
+  const [theme, setTheme] = useState(() => (typeof document !== "undefined" && document.documentElement.dataset.theme) || "light");
+  const isDark = theme === "dark";
+  const toggleTheme = () => setTheme((t) => {
+    const n = t === "dark" ? "light" : "dark";
+    document.documentElement.dataset.theme = n;
+    try { localStorage.setItem("nls-theme", n); } catch (e) {}
+    const m = document.querySelector('meta[name="theme-color"]');
+    if (m) m.setAttribute("content", n === "dark" ? "#0F1713" : "#1B5235");
+    return n;
+  });
 
   useEffect(() => {
     api.getQuotes().then((q) => Array.isArray(q) && q.length && setQuotes(q));
@@ -87,14 +97,20 @@ export default function App() {
             })}
           </nav>
 
-          <div style={{ marginTop: "auto", fontSize: 11.5, color: T.faint, padding: "0 6px", lineHeight: 1.5 }}>
-            <div style={{ fontWeight: 800, color: T.grain, letterSpacing: ".1em", marginBottom: 4 }}>NLP · 2026</div>
-            Gieo đúng giống, đúng thời — gặt đúng mùa.
+          <div style={{ marginTop: "auto" }}>
+            <button onClick={toggleTheme} className="press"
+              style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "10px 13px", borderRadius: R.ctrl, border: `1px solid ${T.line}`, background: T.surfaceAlt, color: T.text, cursor: "pointer", fontFamily: FONT, fontWeight: 700, fontSize: 13.5, marginBottom: 14 }}>
+              <Icon name={isDark ? "sun" : "moon"} size={18} /> {isDark ? "Chế độ sáng" : "Chế độ tối"}
+            </button>
+            <div style={{ fontSize: 11.5, color: T.faint, padding: "0 6px", lineHeight: 1.5 }}>
+              <div style={{ fontWeight: 800, color: T.grain, letterSpacing: ".1em", marginBottom: 4 }}>NLP · 2026</div>
+              Gieo đúng giống, đúng thời — gặt đúng mùa.
+            </div>
           </div>
         </aside>
 
         <main style={{ flex: 1, minWidth: 0, overflowY: "auto", height: "100vh" }}>
-          <div style={{ maxWidth: fullBleed ? 1360 : 780, margin: "0 auto", padding: fullBleed ? "28px 36px 64px" : "30px 30px 64px" }}>{screen}</div>
+          <div style={{ maxWidth: fullBleed ? 1360 : 780, margin: "0 auto", padding: view === "home" ? "18px 36px 20px" : fullBleed ? "28px 36px 64px" : "30px 30px 64px" }}>{screen}</div>
         </main>
       </div>
     );
@@ -105,13 +121,19 @@ export default function App() {
   const tabsR = [NAV[4], NAV[5]]; // Ví, Ghi Chú
   return (
     <div style={{ minHeight: "100vh", background: T.canvas, fontFamily: FONT, color: T.text }}>
-      <div style={{ maxWidth: 480, margin: "0 auto", padding: "18px 15px calc(112px + env(safe-area-inset-bottom))", overflowX: "hidden" }}>
+      <div style={{ maxWidth: 480, margin: "0 auto", padding: "12px 15px 0", display: "flex", justifyContent: "flex-end" }}>
+        <button onClick={toggleTheme} className="press"
+          style={{ display: "flex", alignItems: "center", gap: 7, padding: "7px 13px", borderRadius: 999, border: `1px solid ${T.line}`, background: T.surface, color: T.text, cursor: "pointer", fontFamily: FONT, fontWeight: 700, fontSize: 12.5, boxShadow: T.shadowSm }}>
+          <Icon name={isDark ? "sun" : "moon"} size={16} /> {isDark ? "Sáng" : "Tối"}
+        </button>
+      </div>
+      <div style={{ maxWidth: 480, margin: "0 auto", padding: "10px 15px calc(112px + env(safe-area-inset-bottom))", overflowX: "hidden" }}>
         {screen}
       </div>
 
       <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, display: "flex", justifyContent: "center", pointerEvents: "none" }}>
         <div style={{ width: "100%", maxWidth: 480, position: "relative", pointerEvents: "auto" }}>
-          <div style={{ background: "rgba(255,255,255,.92)", backdropFilter: "blur(12px)", borderTop: `1px solid ${T.line}`, boxShadow: "0 -8px 26px rgba(16,58,36,.10)", display: "flex", alignItems: "flex-end", justifyContent: "space-around", padding: "9px 8px calc(12px + env(safe-area-inset-bottom))" }}>
+          <div style={{ background: T.barBg, backdropFilter: "blur(12px)", borderTop: `1px solid ${T.line}`, boxShadow: T.shadow, display: "flex", alignItems: "flex-end", justifyContent: "space-around", padding: "9px 8px calc(12px + env(safe-area-inset-bottom))" }}>
             {tabsL.map((t) => <NavBtn key={t.id} t={t} active={view === t.id} onClick={() => go(t.id)} />)}
             <div style={{ width: 66 }} />
             {tabsR.map((t) => <NavBtn key={t.id} t={t} active={view === t.id} onClick={() => go(t.id)} />)}
