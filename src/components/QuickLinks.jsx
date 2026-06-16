@@ -1,0 +1,110 @@
+import React, { useState } from "react";
+import { T, R, FONT } from "../lib/theme.js";
+import { kiotvietShopUrl } from "../lib/config.js";
+import { Card, SectionTitle, Btn, IconBtn, Modal, Field, inputStyle, EmptyState } from "./ui.jsx";
+import { Icon } from "./icons.jsx";
+
+// Dựng URL cuối cùng cho 1 mục (kind "kiotviet" tự ghép theo retailer)
+export const resolveUrl = (item, retailer) => (item.kind === "kiotviet" ? kiotvietShopUrl(retailer) : (item.url || "").trim());
+const openLink = (url) => { if (url) window.open(url, "_blank", "noopener,noreferrer"); };
+
+// Ô bấm mở liên kết
+function LinkTile({ item, retailer }) {
+  const url = resolveUrl(item, retailer);
+  const color = item.color || T.ink;
+  return (
+    <button onClick={() => openLink(url)} className="lift press"
+      style={{ display: "flex", alignItems: "center", gap: 11, padding: "13px 14px", borderRadius: R.ctrl, border: `1px solid ${T.line}`, background: T.surface, cursor: "pointer", fontFamily: FONT, textAlign: "left", boxShadow: T.shadowSm, minWidth: 0 }}>
+      <span style={{ width: 38, height: 38, borderRadius: 11, flexShrink: 0, display: "grid", placeItems: "center", fontSize: 19, background: `${color}1A` }}>{item.icon || "🔗"}</span>
+      <span style={{ minWidth: 0, flex: 1 }}>
+        <span style={{ display: "block", fontWeight: 800, fontSize: 14, color: T.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.label}</span>
+        <span style={{ display: "block", fontSize: 11.5, color: T.faint, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{url ? url.replace(/^https?:\/\//, "") : "Chưa đặt liên kết"}</span>
+      </span>
+      <span style={{ color: T.faint, flexShrink: 0, display: "flex" }}><Icon name="external" size={16} /></span>
+    </button>
+  );
+}
+
+// cfg = { retailer, items }; onChange(cfg) để lưu Upstash
+export default function QuickLinks({ cfg, onChange }) {
+  const [open, setOpen] = useState(false);
+  const items = cfg?.items || [];
+  const retailer = cfg?.retailer || "";
+
+  return (
+    <Card>
+      <SectionTitle icon="external" right={<IconBtn icon="cog" onClick={() => setOpen(true)} title="Tuỳ chỉnh liên kết" color={T.ink} />}>Truy cập nhanh</SectionTitle>
+      {items.length === 0 ? (
+        <EmptyState>Chưa có liên kết. Bấm ⚙ để thêm.</EmptyState>
+      ) : (
+        <div style={{ display: "grid", gap: 9 }}>
+          {items.map((it) => <LinkTile key={it.id} item={it} retailer={retailer} />)}
+        </div>
+      )}
+      <LinkEditor open={open} cfg={cfg} onClose={() => setOpen(false)} onChange={onChange} />
+    </Card>
+  );
+}
+
+// Nút mở KiotViet đơn lẻ (dùng trong Kiểm Két)
+export function KiotvietButton({ cfg, label = "Mở KiotViet để xem báo cáo" }) {
+  const item = (cfg?.items || []).find((i) => i.kind === "kiotviet") || { kind: "kiotviet" };
+  return (
+    <Btn variant="ghost" full onClick={() => openLink(resolveUrl(item, cfg?.retailer))}>
+      <Icon name="external" size={17} /> {label}
+    </Btn>
+  );
+}
+
+const EMOJIS = ["🔗", "🛒", "🔑", "🌾", "📊", "📒", "📱", "💬", "🏪", "📦", "🧾", "🌱"];
+
+function LinkEditor({ open, cfg, onClose, onChange }) {
+  const [retailer, setRetailer] = useState(cfg?.retailer || "");
+  const [items, setItems] = useState(cfg?.items || []);
+  React.useEffect(() => { if (open) { setRetailer(cfg?.retailer || ""); setItems(cfg?.items || []); } }, [open]); // eslint-disable-line
+
+  const upd = (id, patch) => setItems((p) => p.map((x) => (x.id === id ? { ...x, ...patch } : x)));
+  const del = (id) => setItems((p) => p.filter((x) => x.id !== id));
+  const add = () => setItems((p) => [...p, { id: "u" + Date.now(), kind: "url", label: "Liên kết mới", url: "", icon: "🔗", color: T.ink }]);
+  const save = () => { onChange({ retailer: retailer.trim(), items }); onClose(); };
+
+  return (
+    <Modal open={open} title="Tuỳ chỉnh truy cập nhanh" onClose={onClose}>
+      <div style={{ display: "grid", gap: 14 }}>
+        <Card style={{ padding: 14 }}>
+          <Field label="Địa chỉ truy cập cửa hàng KiotViet" hint={retailer.trim() ? `Mở: https://${retailer.trim()}.kiotviet.vn` : "Để trống sẽ mở trang kiotviet.vn"}>
+            <div style={{ position: "relative" }}>
+              <input value={retailer} onChange={(e) => setRetailer(e.target.value.replace(/[^a-zA-Z0-9-]/g, "").toLowerCase())} placeholder="vd: huyentho" style={{ ...inputStyle, paddingRight: 92, fontWeight: 700 }} />
+              <span style={{ position: "absolute", right: 13, top: "50%", transform: "translateY(-50%)", color: T.muted, fontWeight: 700, fontSize: 13 }}>.kiotviet.vn</span>
+            </div>
+          </Field>
+        </Card>
+
+        <div style={{ display: "grid", gap: 10 }}>
+          {items.map((it) => (
+            <Card key={it.id} style={{ padding: 13 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 9 }}>
+                <select value={it.icon || "🔗"} onChange={(e) => upd(it.id, { icon: e.target.value })} style={{ ...inputStyle, width: 58, padding: "9px 6px", textAlign: "center", fontSize: 18 }}>
+                  {EMOJIS.map((e) => <option key={e} value={e}>{e}</option>)}
+                </select>
+                <input value={it.label} onChange={(e) => upd(it.id, { label: e.target.value })} placeholder="Tên hiển thị" style={{ ...inputStyle, fontWeight: 700 }} />
+                <IconBtn icon="trash" onClick={() => del(it.id)} title="Xoá" color={T.danger} />
+              </div>
+              {it.kind === "kiotviet" ? (
+                <div style={{ fontSize: 12.5, color: T.muted, fontWeight: 600, padding: "2px 2px" }}>🔒 Tự mở gian hàng KiotViet theo địa chỉ ở trên.</div>
+              ) : (
+                <input value={it.url || ""} onChange={(e) => upd(it.id, { url: e.target.value })} placeholder="https://..." inputMode="url" style={inputStyle} />
+              )}
+            </Card>
+          ))}
+        </div>
+
+        <Btn variant="soft" full onClick={add}><Icon name="plus" size={17} /> Thêm liên kết</Btn>
+        <div style={{ display: "flex", gap: 9 }}>
+          <Btn variant="ghost" onClick={onClose} style={{ flex: 1 }}>Huỷ</Btn>
+          <Btn variant="primary" onClick={save} style={{ flex: 2 }}>Lưu</Btn>
+        </div>
+      </div>
+    </Modal>
+  );
+}
