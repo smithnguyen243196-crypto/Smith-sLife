@@ -24,7 +24,10 @@ export default async function handler(req, res) {
       const data = await queryDS(DS(), {
         filter: { and: [
           { property: T.status, select: { equals: "Hoạt Động" } },
-          { property: T.done, checkbox: { equals: false } },
+          { or: [
+            { property: T.done, checkbox: { equals: false } },
+            { property: T.doneDate, date: { equals: today() } },
+          ] },
         ] },
         sorts: [{ property: T.due, direction: "ascending" }],
         page_size: 100,
