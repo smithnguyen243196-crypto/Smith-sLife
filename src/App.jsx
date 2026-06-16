@@ -128,9 +128,7 @@ export default function App() {
     );
   }
 
-  /* ---------- MOBILE: cột đơn + thanh dưới ---------- */
-  const tabsL = [NAV[1], NAV[2]]; // Nhiệm Vụ, Kiểm Két
-  const tabsR = [NAV[4], NAV[5]]; // Ví, Ghi Chú
+  /* ---------- MOBILE: cột đơn + thanh dưới (đủ 6 mục) ---------- */
   return (
     <div style={{ minHeight: "100vh", background: T.canvas, fontFamily: FONT, color: T.text }}>
       <div style={{ maxWidth: 480, margin: "0 auto", padding: "12px 15px 0", display: "flex", justifyContent: "flex-end" }}>
@@ -139,21 +137,13 @@ export default function App() {
           <Icon name={isDark ? "sun" : "moon"} size={16} /> {isDark ? "Sáng" : "Tối"}
         </button>
       </div>
-      <div style={{ maxWidth: 480, margin: "0 auto", padding: "10px 15px calc(112px + env(safe-area-inset-bottom))", overflowX: "hidden" }}>
+      <div style={{ maxWidth: 480, margin: "0 auto", padding: "10px 15px calc(82px + env(safe-area-inset-bottom))", overflowX: "hidden" }}>
         {screen}
       </div>
 
       <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, display: "flex", justifyContent: "center", pointerEvents: "none" }}>
-        <div style={{ width: "100%", maxWidth: 480, position: "relative", pointerEvents: "auto" }}>
-          <div style={{ background: T.barBg, backdropFilter: "blur(12px)", borderTop: `1px solid ${T.line}`, boxShadow: T.shadow, display: "flex", alignItems: "flex-end", justifyContent: "space-around", padding: "9px 8px calc(12px + env(safe-area-inset-bottom))" }}>
-            {tabsL.map((t) => <NavBtn key={t.id} t={t} active={view === t.id} onClick={() => go(t.id)} />)}
-            <div style={{ width: 66 }} />
-            {tabsR.map((t) => <NavBtn key={t.id} t={t} active={view === t.id} onClick={() => go(t.id)} />)}
-          </div>
-          <button onClick={() => go("home")} aria-label="Trang chủ" className="press"
-            style={{ position: "absolute", left: "50%", top: -24, transform: "translateX(-50%)", width: 62, height: 62, borderRadius: "50%", border: `4px solid ${T.canvas}`, background: view === "home" ? `linear-gradient(135deg,${T.grain},${T.grainDeep})` : `linear-gradient(135deg,${T.ink},${T.inkDeep})`, color: "#fff", cursor: "pointer", boxShadow: T.shadow, display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <Icon name={view === "home" ? "sun" : "home"} size={26} />
-          </button>
+        <div style={{ width: "100%", maxWidth: 480, pointerEvents: "auto", background: T.barBg, backdropFilter: "blur(12px)", borderTop: `1px solid ${T.line}`, boxShadow: T.shadow, display: "flex", justifyContent: "space-around", padding: "8px 4px calc(10px + env(safe-area-inset-bottom))" }}>
+          {NAV.map((t) => <NavBtn key={t.id} t={t} active={view === t.id} onClick={() => go(t.id)} />)}
         </div>
       </div>
     </div>
@@ -162,9 +152,9 @@ export default function App() {
 
 function NavBtn({ t, active, onClick }) {
   return (
-    <button onClick={onClick} className="press" style={{ flex: 1, background: "transparent", border: "none", cursor: "pointer", fontFamily: "inherit", display: "flex", flexDirection: "column", alignItems: "center", gap: 3, padding: "2px 0", color: active ? T.ink : T.faint }}>
-      <Icon name={t.icon} size={23} style={{ opacity: active ? 1 : .8 }} />
-      <span style={{ fontSize: 10.5, fontWeight: active ? 800 : 600 }}>{t.label}</span>
+    <button onClick={onClick} className="press" style={{ flex: 1, minWidth: 0, background: "transparent", border: "none", cursor: "pointer", fontFamily: "inherit", display: "flex", flexDirection: "column", alignItems: "center", gap: 3, padding: "2px 0", color: active ? T.ink : T.faint }}>
+      <Icon name={t.icon} size={21} style={{ opacity: active ? 1 : .8 }} />
+      <span style={{ fontSize: 9.5, fontWeight: active ? 800 : 600, whiteSpace: "nowrap" }}>{t.label}</span>
     </button>
   );
 }
