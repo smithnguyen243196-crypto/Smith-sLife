@@ -8,6 +8,7 @@ import { Card, Eyebrow, QuoteBar, SunRing, ProgressBar, Btn } from "../component
 import { Icon } from "../components/icons.jsx";
 import QuickLinks from "../components/QuickLinks.jsx";
 import MonthCalendar from "../components/MonthCalendar.jsx";
+import AnalogClock from "../components/AnalogClock.jsx";
 
 const TOOLS = [
   { id: "tasks", icon: "tasks", title: "Nhiệm Vụ Ngày", desc: "Thói quen & việc cần làm" },
@@ -28,7 +29,7 @@ export default function Home({ quote, nlpQuote, now, go, linkProps, compact }) {
   const doneHabits = NGAY_HABITS.filter((k) => habitMap[k]).length;
   const habitPct = (doneHabits / NGAY_HABITS.length) * 100;
 
-  /* ---- lời chào (dùng chung) ---- */
+  /* ---- lời chào ---- */
   const greetText = (big) => (
     <div style={{ minWidth: 0, flex: 1 }}>
       <div style={{ fontFamily: SERIF, fontSize: big ? 34 : 26, fontWeight: 700, lineHeight: 1.1, color: T.ink }}>
@@ -53,40 +54,10 @@ export default function Home({ quote, nlpQuote, now, go, linkProps, compact }) {
       </div>
     );
   };
-
-  /* ---- khối nhịp ngày (đẹp, dùng cho desktop) ---- */
-  const habitPanel = (
-    <Card>
-      <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
-        <SunRing pct={habitPct} size={92} />
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <Eyebrow>Nhịp ngày hôm nay</Eyebrow>
-          <div style={{ fontFamily: SERIF, fontSize: 22, fontWeight: 700, color: T.text, marginTop: 4 }}>
-            {doneHabits}/{NGAY_HABITS.length} thói quen đã xong
-          </div>
-          <div style={{ marginTop: 10 }}><ProgressBar pct={habitPct} height={9} /></div>
-        </div>
-        <Btn variant="soft" onClick={() => go("tasks")} style={{ flexShrink: 0 }}>Mở nhật ký</Btn>
-      </div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(168px,1fr))", gap: 8, marginTop: 16 }}>
-        {NGAY_HABITS.map((k) => <HabitChip key={k} label={k} />)}
-      </div>
-    </Card>
-  );
-
-  /* ---- nhịp ngày gọn (mobile) ---- */
-  const habitCompact = (
-    <Card>
-      <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-        <SunRing pct={habitPct} size={64} />
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 12.5, color: T.muted, fontWeight: 700 }}>Nhịp ngày hôm nay</div>
-          <div style={{ fontSize: 16, fontWeight: 900, color: T.text }}>{doneHabits}/{NGAY_HABITS.length} thói quen</div>
-          <div style={{ marginTop: 8 }}><ProgressBar pct={habitPct} height={8} /></div>
-        </div>
-        <Btn variant="soft" onClick={() => go("tasks")} style={{ flexShrink: 0 }}>Nhật ký</Btn>
-      </div>
-    </Card>
+  const chips = (min) => (
+    <div style={{ display: "grid", gridTemplateColumns: `repeat(auto-fill, minmax(${min}px,1fr))`, gap: 8 }}>
+      {NGAY_HABITS.map((k) => <HabitChip key={k} label={k} />)}
+    </div>
   );
 
   const toolGrid = (cols) => (
@@ -106,20 +77,38 @@ export default function Home({ quote, nlpQuote, now, go, linkProps, compact }) {
   if (compact) {
     return (
       <div style={{ display: "grid", gap: 16 }}>
-        {/* HERO: lời chào | lịch tháng */}
+        {/* HERO: lời chào (trên) · lịch (trái) · đồng hồ + thói quen (phải) */}
         <Card style={{ padding: 0, overflow: "hidden", background: `linear-gradient(150deg, ${T.surface}, ${T.surfaceAlt})` }}>
-          <div style={{ display: "flex", alignItems: "stretch" }}>
-            <div style={{ flex: "1.15 1 0", padding: "24px 26px", display: "flex", alignItems: "flex-start", gap: 16 }}>
-              {greetText(true)}
-              <img src={AVATAR} alt="Smith" style={{ width: 66, height: 66, borderRadius: "50%", objectFit: "cover", flexShrink: 0, border: `3px solid ${T.grainSoft}`, boxShadow: T.shadowSm }} />
-            </div>
-            <div style={{ flex: "1 1 0", minWidth: 340, padding: "18px 22px", borderLeft: `1px solid ${T.line}`, background: T.surface }}>
+          <div style={{ padding: "22px 26px 18px", display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16 }}>
+            {greetText(true)}
+            <img src={AVATAR} alt="Smith" style={{ width: 66, height: 66, borderRadius: "50%", objectFit: "cover", flexShrink: 0, border: `3px solid ${T.grainSoft}`, boxShadow: T.shadowSm }} />
+          </div>
+
+          <div style={{ display: "flex", alignItems: "stretch", borderTop: `1px solid ${T.line}`, background: T.surface }}>
+            {/* TRÁI: lịch tháng */}
+            <div style={{ flex: "1 1 0", minWidth: 320, padding: "18px 22px", borderRight: `1px solid ${T.line}` }}>
               <MonthCalendar now={now} />
+            </div>
+            {/* PHẢI: đồng hồ + nhịp ngày */}
+            <div style={{ flex: "1.12 1 0", minWidth: 360, padding: "18px 22px", display: "grid", gap: 14, alignContent: "start" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
+                <AnalogClock size={124} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10 }}>
+                    <div style={{ minWidth: 0 }}>
+                      <Eyebrow>Nhịp ngày hôm nay</Eyebrow>
+                      <div style={{ fontFamily: SERIF, fontSize: 21, fontWeight: 700, color: T.text, marginTop: 4 }}>{doneHabits}/{NGAY_HABITS.length} thói quen đã xong</div>
+                    </div>
+                    <SunRing pct={habitPct} size={58} />
+                  </div>
+                  <div style={{ marginTop: 10 }}><ProgressBar pct={habitPct} height={9} /></div>
+                  <Btn variant="soft" onClick={() => go("tasks")} style={{ marginTop: 11, padding: "8px 14px", fontSize: 13.5 }}>Mở nhật ký</Btn>
+                </div>
+              </div>
+              {chips(168)}
             </div>
           </div>
         </Card>
-
-        {habitPanel}
 
         <QuoteBar quote={quote} />
 
@@ -142,7 +131,19 @@ export default function Home({ quote, nlpQuote, now, go, linkProps, compact }) {
         </div>
       </Card>
 
-      {habitCompact}
+      {/* đồng hồ + nhịp ngày */}
+      <Card>
+        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          <AnalogClock size={96} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <Eyebrow>Nhịp ngày hôm nay</Eyebrow>
+            <div style={{ fontSize: 17, fontWeight: 900, color: T.text, marginTop: 3 }}>{doneHabits}/{NGAY_HABITS.length} thói quen</div>
+            <div style={{ marginTop: 8 }}><ProgressBar pct={habitPct} height={8} /></div>
+          </div>
+        </div>
+        <div style={{ marginTop: 12 }}>{chips(150)}</div>
+        <Btn variant="soft" full onClick={() => go("tasks")} style={{ marginTop: 11 }}>Mở nhật ký</Btn>
+      </Card>
 
       <Card><MonthCalendar now={now} compact /></Card>
 
