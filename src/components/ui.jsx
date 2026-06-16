@@ -27,9 +27,9 @@ export const SectionTitle = ({ children, right, icon }) => (
 /* ---------- Nút ---------- */
 export const Btn = ({ children, onClick, variant = "primary", style, disabled, full, type }) => {
   const s = {
-    primary: { background: `linear-gradient(135deg, ${T.ink}, ${T.inkDeep})`, color: "#fff", boxShadow: "0 6px 16px rgba(16,58,36,.22)" },
+    primary: { background: `linear-gradient(135deg, ${T.ink}, ${T.inkDeep})`, color: T.onInk, boxShadow: "0 6px 16px rgba(16,58,36,.22)" },
     accent: { background: `linear-gradient(135deg, ${T.grain}, ${T.grainDeep})`, color: "#2c2105", boxShadow: "0 6px 16px rgba(167,126,28,.25)" },
-    leaf: { background: T.leaf, color: "#fff" },
+    leaf: { background: T.leaf, color: T.onInk },
     ghost: { background: T.surface, color: T.ink, border: `1.5px solid ${T.line}` },
     soft: { background: T.inkSoft, color: T.inkDeep },
     danger: { background: T.dangerSoft, color: T.danger },
@@ -112,8 +112,8 @@ export function ProgressBar({ pct, height = 12, from = T.grain, to = T.ink }) {
 /* ---------- Câu trích ---------- */
 export function QuoteBar({ quote, tone = "ceo", label, style, center, hideAuthor }) {
   if (!quote) return null;
-  const bg = tone === "nlp" ? `linear-gradient(135deg, ${T.soil}, #82654c)` : `linear-gradient(140deg, ${T.inkDeep}, ${T.ink})`;
-  const accent = tone === "nlp" ? "#F0D79B" : T.grainSoft;
+  const bg = tone === "nlp" ? "linear-gradient(135deg, #5A4632, #3A2C1E)" : "linear-gradient(140deg, #0F3A24, #1B5235)";
+  const accent = tone === "nlp" ? "#F0D79B" : T.accentOnInk;
   return (
     <div style={{ background: bg, color: "#fff", borderRadius: R.card, padding: center ? "20px 26px" : "18px 20px", boxShadow: T.shadow, position: "relative", overflow: "hidden", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: center ? "center" : "stretch", textAlign: center ? "center" : "left", ...style }}>
       {!center && <div style={{ position: "absolute", top: -30, right: 10, fontSize: 130, opacity: .1, fontWeight: 700, lineHeight: 1, fontFamily: SERIF }}>”</div>}
@@ -176,10 +176,10 @@ export function SunRing({ pct, size = 64 }) {
   return (
     <div style={{ position: "relative", width: size, height: size, flexShrink: 0 }}>
       <svg width={size} height={size}>
-        <circle cx={cx} cy={cx} r={r} fill="none" stroke={T.surfaceSink} strokeWidth="6" />
-        <circle cx={cx} cy={cx} r={r} fill="none" stroke={T.grain} strokeWidth="6" strokeLinecap="round"
+        <circle cx={cx} cy={cx} r={r} fill="none" strokeWidth="6" style={{ stroke: T.surfaceSink }} />
+        <circle cx={cx} cy={cx} r={r} fill="none" strokeWidth="6" strokeLinecap="round"
           strokeDasharray={c} strokeDashoffset={c * (1 - clamped / 100)} transform={`rotate(-90 ${cx} ${cx})`}
-          style={{ transition: "stroke-dashoffset .6s cubic-bezier(.2,.7,.3,1)" }} />
+          style={{ stroke: T.grain, transition: "stroke-dashoffset .6s cubic-bezier(.2,.7,.3,1)" }} />
       </svg>
       <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, fontSize: 15, color: T.ink }}>{Math.round(clamped)}%</div>
     </div>
