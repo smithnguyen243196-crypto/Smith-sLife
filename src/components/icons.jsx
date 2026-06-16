@@ -38,6 +38,8 @@ export function Icon({ name, size = 24, ...p }) {
     report: (<><rect x="4" y="4" width="16" height="16" rx="2.5" /><path d="M8 15.5v-3M12 15.5V9M16 15.5v-5" /></>),
     // Lịch
     calendar: (<><rect x="4" y="5" width="16" height="15" rx="2.5" /><path d="M4 9.5h16M8 3.5v3M16 3.5v3" /></>),
+    // Menu (thu gọn / mở rộng thanh bên)
+    menu: (<><path d="M4 7h16M4 12h16M4 17h16" /></>),
   }[name];
   return (<svg viewBox="0 0 24 24" width={size} height={size} {...S} {...p}>{paths}</svg>);
 }
