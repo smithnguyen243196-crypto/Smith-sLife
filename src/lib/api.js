@@ -16,7 +16,7 @@ export const api = {
 
   // @Nhiệm Vụ
   getTasks: () => j("/api/tasks").catch(() => []),
-  addTask: (name, projectId) => j("/api/tasks", { method: "POST", body: JSON.stringify({ name, projectId }) }).catch(() => null),
+  addTask: (name, projectId, due) => j("/api/tasks", { method: "POST", body: JSON.stringify({ name, projectId, due }) }).catch(() => null),
   toggleTask: (id, done) => j("/api/tasks", { method: "PATCH", body: JSON.stringify({ id, done }) }).catch(() => null),
   deleteTask: (id) => j(`/api/tasks?id=${id}`, { method: "DELETE" }).catch(() => null),
 
