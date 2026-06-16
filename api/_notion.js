@@ -11,6 +11,8 @@ async function call(path, method = "GET", body) {
 }
 // Truy vấn 1 data source
 export const queryDS = (ds, body = {}) => call(`/data_sources/${ds}/query`, "POST", body);
+// Lấy schema (properties) của data source
+export const retrieveDS = (ds) => call(`/data_sources/${ds}`, "GET");
 // Tạo page trong data source
 export const createPage = (ds, properties) => call(`/pages`, "POST", { parent: { type: "data_source_id", data_source_id: ds }, properties });
 // Cập nhật properties của page
