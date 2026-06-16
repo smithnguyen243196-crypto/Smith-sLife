@@ -24,18 +24,23 @@ export const REASON_SUGGEST = ["Chi bớt khách", "Xăng", "Quà", "Nợ công 
 export const PERSON_SUGGEST = ["a.Tài", "Hải", "a.Thắng", "Uyên", "Đô", "Gin", "Như Ý", "c.Hân", "Tom", "a.Linh", "Bi", "Bình"];
 export const VI_CATEGORIES = ["Ăn uống", "Điện nước", "Đưa vợ", "Xăng xe", "Mua sắm", "Y tế", "Học tập", "Giải trí", "Lương/Thu nhập", "Khác"];
 
-// ===== Truy cập nhanh (KiotViet + liên kết tuỳ chỉnh) =====
+// ===== Truy cập nhanh (KiotViet huyenthoco + liên kết tuỳ chỉnh) =====
 // retailer = "địa chỉ truy cập cửa hàng" trên KiotViet -> mở https://<retailer>.kiotviet.vn
 // Smith chỉnh retailer + danh sách link trong app; cấu hình đồng bộ qua Upstash.
 export const KIOTVIET_HOME = "https://www.kiotviet.vn";
 export const kiotvietShopUrl = (retailer) =>
   retailer && retailer.trim() ? `https://${retailer.trim()}.kiotviet.vn` : KIOTVIET_HOME;
 
-// Link mặc định lần đầu (Smith sửa/thêm thoải mái). kind: "kiotviet" tự dựng URL theo retailer.
+export const DEFAULT_RETAILER = "huyenthoco";
+// Tăng số này khi đổi bộ link mặc định -> app sẽ nạp lại link mới (ghi đè cấu hình cũ trong Upstash).
+export const LINKS_VERSION = 2;
+
+// Link mặc định (Smith sửa/thêm thoải mái). iconName: icon nét đồng bộ với thẻ công cụ.
 export const DEFAULT_LINKS = [
-  { id: "kv-shop", kind: "kiotviet", label: "KiotViet · Gian hàng", icon: "🛒", color: "#1B5235" },
-  { id: "kv-login", kind: "url", label: "KiotViet · Đăng nhập", url: KIOTVIET_HOME, icon: "🔑", color: "#C79A2C" },
-  { id: "store-web", kind: "url", label: "VTNNHUYENTHO.VN", url: "https://vtnnhuyentho.vn", icon: "🌾", color: "#3E8E5A" },
+  { id: "kv-sale", kind: "url", label: "Bán Hàng", desc: "Màn hình bán hàng", url: "https://huyenthoco.kiotviet.vn/sale/#/", iconName: "cart", icon: "🛒", color: "#1B5235" },
+  { id: "kv-invoice", kind: "url", label: "Hóa Đơn", desc: "Danh sách hoá đơn", url: "https://huyenthoco.kiotviet.vn/man/#/Invoices", iconName: "invoice", icon: "🧾", color: "#C79A2C" },
+  { id: "kv-customer", kind: "url", label: "Khách Hàng", desc: "Quản lý khách hàng", url: "https://huyenthoco.kiotviet.vn/man/#/Customers", iconName: "users", icon: "👥", color: "#3E8E5A" },
+  { id: "kv-eod", kind: "url", label: "Báo Cáo Cuối Ngày", desc: "Tổng kết cuối ngày", url: "https://huyenthoco.kiotviet.vn/man/#/EndOfDayReport", iconName: "report", icon: "📊", color: "#6A523E" },
 ];
 
 // Nhãn (tag) nhanh cho Ghi Chú.
