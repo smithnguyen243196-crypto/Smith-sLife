@@ -55,7 +55,7 @@ export default function KiemKetTool({ quote, now, linkCfg, wide }) {
     setTab("dem");
   };
 
-  const TabBtn = ({ id, label }) => (<button onClick={() => setTab(id)} className="press" style={{ flex: 1, minWidth: 0, padding: "10px 0", borderRadius: R.ctrl, border: "none", cursor: "pointer", fontFamily: "inherit", fontWeight: 800, fontSize: 14, background: tab === id ? `linear-gradient(135deg,${T.ink},${T.inkDeep})` : "transparent", color: tab === id ? "#fff" : T.muted }}>{label}</button>);
+  const TabBtn = ({ id, label }) => (<button onClick={() => setTab(id)} className="press" style={{ flex: 1, minWidth: 0, padding: "10px 0", borderRadius: R.ctrl, border: "none", cursor: "pointer", fontFamily: "inherit", fontWeight: 800, fontSize: 14, background: tab === id ? `linear-gradient(135deg,${T.ink},${T.inkDeep})` : "transparent", color: tab === id ? T.onInk : T.muted }}>{label}</button>);
   const Row = ({ label, value, strong, color }) => (<div style={{ display: "flex", justifyContent: "space-between", padding: "9px 0", borderBottom: `1px dashed ${T.line}` }}><span style={{ color: T.muted, fontSize: 14, fontWeight: strong ? 800 : 600 }}>{label}</span><span style={{ fontWeight: strong ? 900 : 700, fontSize: strong ? 17 : 15, color: color || T.text }}>{fmt(value)} đ</span></div>);
 
   /* ===================== 3 phần dùng chung ===================== */
