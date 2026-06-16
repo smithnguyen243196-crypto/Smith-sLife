@@ -110,16 +110,16 @@ export function ProgressBar({ pct, height = 12, from = T.grain, to = T.ink }) {
 }
 
 /* ---------- Câu trích ---------- */
-export function QuoteBar({ quote, tone = "ceo", label, style }) {
+export function QuoteBar({ quote, tone = "ceo", label, style, center, hideAuthor }) {
   if (!quote) return null;
   const bg = tone === "nlp" ? `linear-gradient(135deg, ${T.soil}, #82654c)` : `linear-gradient(140deg, ${T.inkDeep}, ${T.ink})`;
   const accent = tone === "nlp" ? "#F0D79B" : T.grainSoft;
   return (
-    <div style={{ background: bg, color: "#fff", borderRadius: R.card, padding: "18px 20px", boxShadow: T.shadow, position: "relative", overflow: "hidden", display: "flex", flexDirection: "column", justifyContent: "center", ...style }}>
-      <div style={{ position: "absolute", top: -30, right: 10, fontSize: 130, opacity: .1, fontWeight: 700, lineHeight: 1, fontFamily: SERIF }}>”</div>
+    <div style={{ background: bg, color: "#fff", borderRadius: R.card, padding: center ? "20px 26px" : "18px 20px", boxShadow: T.shadow, position: "relative", overflow: "hidden", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: center ? "center" : "stretch", textAlign: center ? "center" : "left", ...style }}>
+      {!center && <div style={{ position: "absolute", top: -30, right: 10, fontSize: 130, opacity: .1, fontWeight: 700, lineHeight: 1, fontFamily: SERIF }}>”</div>}
       {label && <Eyebrow color={accent} style={{ marginBottom: 8, position: "relative" }}>{label}</Eyebrow>}
-      <div style={{ fontSize: 17, fontWeight: 500, lineHeight: 1.55, fontFamily: SERIF, fontStyle: "italic", position: "relative" }}>{quote.text}</div>
-      <div style={{ marginTop: 10, fontSize: 13, fontWeight: 700, color: accent, position: "relative", letterSpacing: ".01em" }}>— {quote.author}</div>
+      <div style={{ fontSize: center ? 18 : 17, fontWeight: 500, lineHeight: 1.55, fontFamily: SERIF, fontStyle: "italic", position: "relative", maxWidth: center ? 880 : "none" }}>{quote.text}</div>
+      {!hideAuthor && quote.author && <div style={{ marginTop: 10, fontSize: 13, fontWeight: 700, color: accent, position: "relative", letterSpacing: ".01em" }}>— {quote.author}</div>}
     </div>
   );
 }
