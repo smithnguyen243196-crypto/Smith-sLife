@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { T, R, FONT, SERIF, DESKTOP } from "./lib/theme.js";
+import { T, R, FONT, DESKTOP } from "./lib/theme.js";
 import { api } from "./lib/api.js";
 import { useMediaQuery } from "./lib/hooks.js";
-import { DEFAULT_LINKS } from "./lib/config.js";
+import { DEFAULT_LINKS, DEFAULT_RETAILER, LINKS_VERSION } from "./lib/config.js";
 import { AVATAR } from "./lib/avatar.js";
 import { Icon } from "./components/icons.jsx";
 import Home from "./tools/Home.jsx";
@@ -29,41 +29,23 @@ const NAV = [
 ];
 const pick = (arr, now) => arr[Math.floor((now - new Date(now.getFullYear(), 0, 0)) / 86400000) % arr.length];
 
-// dấu hiệu thương hiệu: mặt trời mọc trên ruộng
-function LogoMark({ size = 38 }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 40 40">
-      <defs>
-        <linearGradient id="lg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#3C8A5A" /><stop offset="1" stopColor="#1B5235" /></linearGradient>
-      </defs>
-      <rect width="40" height="40" rx="11" fill="url(#lg)" />
-      <circle cx="20" cy="18" r="6.5" fill="#F4E9CA" />
-      <g stroke="#F4E9CA" strokeWidth="1.6" strokeLinecap="round" opacity=".9">
-        <line x1="20" y1="6" x2="20" y2="9" /><line x1="9.5" y1="18" x2="12.5" y2="18" /><line x1="27.5" y1="18" x2="30.5" y2="18" /><line x1="12" y1="10" x2="14" y2="12" /><line x1="28" y1="10" x2="26" y2="12" />
-      </g>
-      <path d="M2 30 Q12 24 20 30 T40 30 V40 H0 Z" fill="#103A24" opacity=".55" />
-      <path d="M0 33 Q11 28 20 33 T40 32 V40 H0 Z" fill="#0F3A24" />
-    </svg>
-  );
-}
-
 export default function App() {
   const [view, setView] = useState("home");
   const [now] = useState(new Date());
   const [quotes, setQuotes] = useState(FALLBACK);
   const [nlp, setNlp] = useState(FALLBACK_NLP);
-  const [links, setLinks] = useState({ retailer: "", items: DEFAULT_LINKS });
+  const [links, setLinks] = useState({ version: LINKS_VERSION, retailer: DEFAULT_RETAILER, items: DEFAULT_LINKS });
   const isDesktop = useMediaQuery(`(min-width:${DESKTOP}px)`);
 
   useEffect(() => {
     api.getQuotes().then((q) => Array.isArray(q) && q.length && setQuotes(q));
     api.getNlpQuotes().then((q) => Array.isArray(q) && q.length && setNlp(q));
-    api.getLinks().then((c) => { if (c && c.items) setLinks(c); });
+    api.getLinks().then((c) => { if (c && c.items && c.version === LINKS_VERSION) setLinks(c); });
   }, []);
   const quote = useMemo(() => pick(quotes, now), [quotes, now]);
   const nlpQuote = useMemo(() => pick(nlp, now), [nlp, now]);
 
-  const saveLinks = (cfg) => { setLinks(cfg); api.saveLinks(cfg); };
+  const saveLinks = (cfg) => { const v = { ...cfg, version: LINKS_VERSION }; setLinks(v); api.saveLinks(v); };
   const go = (v) => setView(v);
   const linkProps = { cfg: links, onChange: saveLinks };
   const fullBleed = view === "home" || view === "kiemket"; // màn hình dashboard trải rộng
@@ -84,19 +66,11 @@ export default function App() {
     return (
       <div style={{ minHeight: "100vh", background: T.canvas, fontFamily: FONT, color: T.text, display: "flex" }}>
         <aside style={{ width: 268, flexShrink: 0, background: T.surface, borderRight: `1px solid ${T.line}`, height: "100vh", position: "sticky", top: 0, display: "flex", flexDirection: "column", padding: "22px 16px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 11, padding: "0 6px 18px" }}>
-            <LogoMark />
-            <div style={{ minWidth: 0 }}>
-              <div style={{ fontFamily: SERIF, fontWeight: 700, fontSize: 18, color: T.ink, lineHeight: 1.1 }}>Nông Lịch Số</div>
-              <div style={{ fontSize: 11.5, color: T.faint, fontWeight: 600 }}>Bộ công cụ của Smith</div>
-            </div>
-          </div>
-
-          <div style={{ display: "flex", alignItems: "center", gap: 11, padding: "12px", borderRadius: R.ctrl, background: T.surfaceAlt, marginBottom: 16 }}>
-            <img src={AVATAR} alt="Smith" style={{ width: 42, height: 42, borderRadius: "50%", objectFit: "cover", border: `2px solid ${T.grainSoft}` }} />
+          <div style={{ display: "flex", alignItems: "center", gap: 11, padding: "6px 12px 12px", borderRadius: R.ctrl, marginBottom: 12 }}>
+            <img src={AVATAR} alt="Smith" style={{ width: 46, height: 46, borderRadius: "50%", objectFit: "cover", border: `2px solid ${T.grainSoft}` }} />
             <div style={{ minWidth: 0 }}>
               <div style={{ fontSize: 11, color: T.muted, fontWeight: 700 }}>Xin chào</div>
-              <div style={{ fontSize: 14.5, fontWeight: 800, color: T.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Smith Nguyễn</div>
+              <div style={{ fontSize: 15.5, fontWeight: 800, color: T.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Smith Nguyễn</div>
             </div>
           </div>
 
