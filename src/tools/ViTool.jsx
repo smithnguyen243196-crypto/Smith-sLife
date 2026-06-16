@@ -15,12 +15,12 @@ export default function ViTool({ quote }) {
   const add = async () => { const amt = parseFloat(form.amount); if (!amt) return; const base = { ...form, amount: amt, date: todayKey() }; const saved = await api.addVi(base); setTxs((p) => [saved || { id: Date.now(), ...base }, ...p]); setForm({ type: form.type, account: form.account, amount: "", category: form.category, note: "" }); };
   const del = (id) => { setTxs((p) => p.filter((x) => x.id !== id)); api.deleteVi(id); };
 
-  const Pill = ({ label, active, onClick }) => (<button onClick={onClick} className="press" style={{ flex: 1, minWidth: 0, padding: 10, borderRadius: R.ctrl, border: "none", cursor: "pointer", fontFamily: "inherit", fontWeight: 800, fontSize: 13.5, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", background: active ? `linear-gradient(135deg,${T.ink},${T.inkDeep})` : T.surfaceAlt, color: active ? "#fff" : T.muted }}>{label}</button>);
+  const Pill = ({ label, active, onClick }) => (<button onClick={onClick} className="press" style={{ flex: 1, minWidth: 0, padding: 10, borderRadius: R.ctrl, border: "none", cursor: "pointer", fontFamily: "inherit", fontWeight: 800, fontSize: 13.5, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", background: active ? `linear-gradient(135deg,${T.ink},${T.inkDeep})` : T.surfaceAlt, color: active ? T.onInk : T.muted }}>{label}</button>);
 
   return (
     <div style={{ display: "grid", gap: 14 }}>
       <QuoteBar quote={quote} />
-      <Card style={{ background: `linear-gradient(140deg,${T.inkDeep},${T.ink})`, color: "#fff", border: "none", boxShadow: T.shadow }}>
+      <Card style={{ background: "linear-gradient(140deg,#0F3A24,#1B5235)", color: "#fff", border: "none", boxShadow: T.shadow }}>
         <div style={{ fontSize: 12, opacity: .82, fontWeight: 700, letterSpacing: ".1em" }}>TỔNG TÀI SẢN</div>
         <div style={{ fontSize: 32, fontWeight: 900, marginTop: 2 }}>{fmt(total)} đ</div>
         <div style={{ display: "flex", gap: 10, marginTop: 14 }}>
