@@ -2,18 +2,18 @@ import React, { useState } from "react";
 import { T, R, FONT } from "../lib/theme.js";
 import { REASON_SUGGEST, PERSON_SUGGEST, NOTE_TAGS } from "../lib/config.js";
 import { api } from "../lib/api.js";
-import { Btn, Modal, MoneyInput, SuggestChips, inputStyle } from "./ui.jsx";
+import { Btn, Modal, MoneyInput, SuggestChips, Field, inputStyle } from "./ui.jsx";
 import { Icon } from "./icons.jsx";
 
 const nowLocal = () => { const d = new Date(); const z = new Date(d.getTime() - d.getTimezoneOffset() * 60000); return z.toISOString().slice(0, 16); };
 
 // onAddTask(name): thêm nhiệm vụ (do trang chủ quản lý để danh sách cập nhật ngay)
-export default function QuickActions({ onAddTask }) {
+export default function QuickActions({ onAddTask, projects = [] }) {
   const [modal, setModal] = useState(null);
   const [busy, setBusy] = useState(false);
   const [okMsg, setOkMsg] = useState("");
   const [chi, setChi] = useState({ amount: "", reason: "", person: "" });
-  const [taskName, setTaskName] = useState("");
+  const [task, setTask] = useState({ name: "", projectId: "", due: new Date().toISOString().slice(0, 10) });
   const [note, setNote] = useState({ text: "", tag: NOTE_TAGS[0] });
 
   const close = () => setModal(null);
@@ -28,8 +28,9 @@ export default function QuickActions({ onAddTask }) {
     setBusy(false); setChi({ amount: "", reason: "", person: "" }); close(); flash("Đã thêm phiếu chi vào Kiểm Két");
   };
   const saveTask = async () => {
-    const n = taskName.trim(); if (!n) return;
-    setBusy(true); await onAddTask(n); setBusy(false); setTaskName(""); close(); flash("Đã thêm nhiệm vụ");
+    const n = task.name.trim(); if (!n) return;
+    setBusy(true); await onAddTask(n, task.projectId || null, task.due || null); setBusy(false);
+    setTask((f) => ({ ...f, name: "" })); close(); flash("Đã thêm nhiệm vụ");
   };
   const saveNote = async () => {
     const t = note.text.trim(); if (!t) return;
@@ -75,7 +76,14 @@ export default function QuickActions({ onAddTask }) {
 
       <Modal open={modal === "task"} title="Thêm nhiệm vụ" onClose={close}>
         <div style={{ display: "grid", gap: 10 }}>
-          <input style={inputStyle} autoFocus placeholder="Tên nhiệm vụ..." value={taskName} onChange={(e) => setTaskName(e.target.value)} onKeyDown={(e) => e.key === "Enter" && saveTask()} />
+          <input style={inputStyle} autoFocus placeholder="Tên nhiệm vụ..." value={task.name} onChange={(e) => setTask((f) => ({ ...f, name: e.target.value }))} onKeyDown={(e) => e.key === "Enter" && saveTask()} />
+          <select value={task.projectId} onChange={(e) => setTask((f) => ({ ...f, projectId: e.target.value }))} style={{ ...inputStyle, padding: "12px 10px" }}>
+            <option value="">— Dự án —</option>
+            {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+          </select>
+          <Field label="Ngày thực hiện">
+            <input type="date" value={task.due} onChange={(e) => setTask((f) => ({ ...f, due: e.target.value }))} style={inputStyle} />
+          </Field>
           <Btn variant="accent" full disabled={busy} onClick={saveTask}>{busy ? "Đang lưu..." : "Thêm nhiệm vụ"}</Btn>
         </div>
       </Modal>
