@@ -6,7 +6,7 @@ import { Icon } from "./icons.jsx";
 const WD = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"];
 
 // Lịch tháng kèm ngày âm — mùng 1 ÂL hiện "tháng/1" để đánh dấu đầu tháng âm.
-export default function MonthCalendar({ now, compact }) {
+export default function MonthCalendar({ now, compact, cell }) {
   const [vy, setVy] = useState(now.getFullYear());
   const [vm, setVm] = useState(now.getMonth()); // 0–11
   const isThisMonth = vy === now.getFullYear() && vm === now.getMonth();
@@ -23,7 +23,7 @@ export default function MonthCalendar({ now, compact }) {
   const goToday = () => { setVy(now.getFullYear()); setVm(now.getMonth()); };
 
   const navBtn = { width: 30, height: 30, borderRadius: 9, border: `1px solid ${T.line}`, background: T.surfaceAlt, color: T.ink, cursor: "pointer", display: "grid", placeItems: "center", fontFamily: FONT };
-  const cellH = compact ? 40 : 46;
+  const cellH = cell || (compact ? 38 : 46);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
