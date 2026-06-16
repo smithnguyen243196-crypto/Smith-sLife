@@ -45,3 +45,9 @@ export const DEFAULT_LINKS = [
 
 // Nhãn (tag) nhanh cho Ghi Chú.
 export const NOTE_TAGS = ["Cửa hàng", "Đồng ruộng", "Khách hàng", "Ý tưởng", "Cá nhân"];
+
+// ===== Màu dự án (cho viền nhiệm vụ + chấm trên lịch) =====
+export const PROJECT_COLORS = ["#3E8E5A", "#C79A2C", "#B5432B", "#2E7D9B", "#7A4DA0", "#C2683A", "#4C7A2F", "#9B6A2E"];
+const hashStr = (s) => { let h = 0; const t = String(s); for (let i = 0; i < t.length; i++) h = (h * 31 + t.charCodeAt(i)) | 0; return Math.abs(h); };
+// Màu ổn định theo id dự án (không đổi khi danh sách đổi thứ tự)
+export const projectColor = (id) => (id ? PROJECT_COLORS[hashStr(id) % PROJECT_COLORS.length] : null);
