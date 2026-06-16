@@ -29,42 +29,86 @@ export default function Home({ quote, nlpQuote, now, go, linkProps, compact }) {
   }, [now]);
   const habitPct = (doneHabits / NGAY_HABITS.length) * 100;
 
-  return (
-    <div style={{ display: "grid", gap: 14 }}>
-      {/* HERO — nông lịch + nhịp ngày */}
-      <Card style={{ padding: 0, overflow: "hidden", background: `linear-gradient(150deg, ${T.surface}, ${T.surfaceAlt})` }}>
-        <div style={{ padding: "18px 18px 16px" }}>
-          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
-            <div style={{ minWidth: 0 }}>
-              <Eyebrow style={{ display: "flex", alignItems: "center", gap: 6 }}><Icon name={dawnIcon} size={14} /> Nông lịch số</Eyebrow>
-              <div style={{ fontFamily: SERIF, fontSize: compact ? 30 : 26, fontWeight: 700, lineHeight: 1.12, color: T.ink, marginTop: 6 }}>
-                {greet},<br />Smith Nguyễn
-              </div>
+  /* ---- khối nhịp ngày (dùng chung) ---- */
+  const pulse = (
+    <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+      <SunRing pct={habitPct} size={compact ? 70 : 62} />
+      <div style={{ minWidth: 0, flex: 1 }}>
+        <div style={{ fontSize: 12.5, color: T.muted, fontWeight: 700 }}>Nhịp ngày hôm nay</div>
+        <div style={{ fontSize: compact ? 18 : 16, fontWeight: 900, color: T.text }}>{doneHabits}/{NGAY_HABITS.length} thói quen</div>
+      </div>
+      <Btn variant="soft" onClick={() => go("tasks")} style={{ flexShrink: 0 }}>Mở nhật ký</Btn>
+    </div>
+  );
+
+  /* ---- phần đầu lời chào (dùng chung) ---- */
+  const greetBlock = (
+    <div style={{ minWidth: 0, flex: 1 }}>
+      <Eyebrow style={{ display: "flex", alignItems: "center", gap: 6 }}><Icon name={dawnIcon} size={14} /> Nông lịch số</Eyebrow>
+      <div style={{ fontFamily: SERIF, fontSize: compact ? 32 : 26, fontWeight: 700, lineHeight: 1.12, color: T.ink, marginTop: 6 }}>
+        {greet},<br />Smith Nguyễn
+      </div>
+      <div style={{ marginTop: 12, fontSize: 14, color: T.muted, fontWeight: 600 }}>
+        {WEEKDAYS[now.getDay()]}, ngày {now.getDate()} tháng {now.getMonth() + 1} năm {now.getFullYear()}
+      </div>
+      <div style={{ fontSize: 13, color: T.grainDeep, fontWeight: 700, marginTop: 2 }}>{lunarLabel(now)}</div>
+    </div>
+  );
+
+  /* ====================== DESKTOP — dàn trải full ====================== */
+  if (compact) {
+    return (
+      <div style={{ display: "grid", gap: 16 }}>
+        {/* HERO: lời chào | nhịp ngày — chia đôi theo chiều ngang */}
+        <Card style={{ padding: 0, overflow: "hidden", background: `linear-gradient(150deg, ${T.surface}, ${T.surfaceAlt})` }}>
+          <div style={{ display: "flex", alignItems: "stretch" }}>
+            <div style={{ flex: "1.3 1 0", padding: "22px 24px", display: "flex", alignItems: "flex-start", gap: 16 }}>
+              {greetBlock}
+              <img src={AVATAR} alt="Smith" style={{ width: 64, height: 64, borderRadius: "50%", objectFit: "cover", flexShrink: 0, border: `3px solid ${T.grainSoft}`, boxShadow: T.shadowSm }} />
             </div>
-            {!compact && (
-              <img src={AVATAR} alt="Smith" style={{ width: 60, height: 60, borderRadius: "50%", objectFit: "cover", flexShrink: 0, border: `3px solid ${T.grainSoft}`, boxShadow: T.shadowSm }} />
-            )}
+            <div style={{ flex: "1 1 0", padding: "22px 24px", borderLeft: `1px solid ${T.line}`, background: T.surface, display: "flex", alignItems: "center" }}>
+              {pulse}
+            </div>
           </div>
-          <div style={{ marginTop: 12, fontSize: 14, color: T.muted, fontWeight: 600 }}>
-            {WEEKDAYS[now.getDay()]}, ngày {now.getDate()} tháng {now.getMonth() + 1} năm {now.getFullYear()}
-          </div>
-          <div style={{ fontSize: 13, color: T.grainDeep, fontWeight: 700, marginTop: 2 }}>{lunarLabel(now)}</div>
+        </Card>
+
+        <QuoteBar quote={quote} />
+
+        {/* Lưới công cụ — 5 ô trên một hàng */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 12 }}>
+          {TOOLS.map((t) => (
+            <button key={t.id} onClick={() => go(t.id)} className="lift press"
+              style={{ textAlign: "left", background: T.surface, border: `1px solid ${T.line}`, borderRadius: R.card, padding: 16, cursor: "pointer", fontFamily: FONT, boxShadow: T.shadowSm }}>
+              <div style={{ width: 48, height: 48, borderRadius: 13, background: T.inkSoft, display: "flex", alignItems: "center", justifyContent: "center", color: T.ink, marginBottom: 12 }}><Icon name={t.icon} size={26} /></div>
+              <div style={{ fontWeight: 800, fontSize: 15.5, color: T.text }}>{t.title}</div>
+              <div style={{ fontSize: 12, color: T.muted, marginTop: 3, lineHeight: 1.35 }}>{t.desc}</div>
+            </button>
+          ))}
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 18px", borderTop: `1px solid ${T.line}`, background: T.surface }}>
-          <SunRing pct={habitPct} size={62} />
-          <div style={{ minWidth: 0, flex: 1 }}>
-            <div style={{ fontSize: 12.5, color: T.muted, fontWeight: 700 }}>Nhịp ngày hôm nay</div>
-            <div style={{ fontSize: 16, fontWeight: 900, color: T.text }}>{doneHabits}/{NGAY_HABITS.length} thói quen</div>
-          </div>
-          <Btn variant="soft" onClick={() => go("tasks")} style={{ flexShrink: 0 }}>Mở nhật ký</Btn>
+        {/* Hàng cuối: truy cập nhanh | trích dẫn NLP */}
+        <div style={{ display: "grid", gridTemplateColumns: "1.55fr 1fr", gap: 16, alignItems: "start" }}>
+          <QuickLinks {...linkProps} />
+          <QuoteBar quote={nlpQuote} tone="nlp" label="NLP · Phát triển bản thân" style={{ height: "100%" }} />
         </div>
+      </div>
+    );
+  }
+
+  /* ====================== MOBILE — cột đơn ====================== */
+  return (
+    <div style={{ display: "grid", gap: 14 }}>
+      <Card style={{ padding: 0, overflow: "hidden", background: `linear-gradient(150deg, ${T.surface}, ${T.surfaceAlt})` }}>
+        <div style={{ padding: "18px 18px 16px", display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
+          {greetBlock}
+          <img src={AVATAR} alt="Smith" style={{ width: 60, height: 60, borderRadius: "50%", objectFit: "cover", flexShrink: 0, border: `3px solid ${T.grainSoft}`, boxShadow: T.shadowSm }} />
+        </div>
+        <div style={{ padding: "14px 18px", borderTop: `1px solid ${T.line}`, background: T.surface }}>{pulse}</div>
       </Card>
 
       <QuoteBar quote={quote} />
 
-      {/* Lưới công cụ */}
-      <div style={{ display: "grid", gridTemplateColumns: compact ? "repeat(3,1fr)" : "repeat(2,1fr)", gap: 12 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 12 }}>
         {TOOLS.map((t) => (
           <button key={t.id} onClick={() => go(t.id)} className="lift press"
             style={{ textAlign: "left", background: T.surface, border: `1px solid ${T.line}`, borderRadius: R.card, padding: 15, cursor: "pointer", fontFamily: FONT, boxShadow: T.shadowSm }}>
@@ -76,7 +120,6 @@ export default function Home({ quote, nlpQuote, now, go, linkProps, compact }) {
       </div>
 
       <QuickLinks {...linkProps} />
-
       <QuoteBar quote={nlpQuote} tone="nlp" label="NLP · Phát triển bản thân" />
     </div>
   );
