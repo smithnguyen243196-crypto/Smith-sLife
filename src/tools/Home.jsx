@@ -67,6 +67,12 @@ export default function Home({ quote, nlpQuote, now, go, linkProps, compact }) {
   if (compact) {
     return (
       <div style={{ display: "grid", gap: 12 }}>
+        {/* câu trích — đầu trang */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, alignItems: "stretch" }}>
+          <QuoteBar quote={quote} style={{ height: "100%" }} />
+          <QuoteBar quote={nlpQuote} tone="nlp" center hideAuthor style={{ height: "100%" }} />
+        </div>
+
         {/* lịch (trái) · đồng hồ + thói quen + thao tác nhanh (phải) */}
         <Card style={{ padding: 0, overflow: "hidden" }}>
           <div style={{ display: "flex", alignItems: "stretch" }}>
@@ -90,12 +96,6 @@ export default function Home({ quote, nlpQuote, now, go, linkProps, compact }) {
           <TaskBoard tasks={tasks} onAdd={addTask} onToggle={toggleTask} onDelete={delTask} />
           <QuickLinks {...linkProps} />
         </div>
-
-        {/* câu trích */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, alignItems: "stretch" }}>
-          <QuoteBar quote={quote} style={{ height: "100%" }} />
-          <QuoteBar quote={nlpQuote} tone="nlp" center hideAuthor style={{ height: "100%" }} />
-        </div>
       </div>
     );
   }
@@ -103,6 +103,9 @@ export default function Home({ quote, nlpQuote, now, go, linkProps, compact }) {
   /* ====================== MOBILE ====================== */
   return (
     <div style={{ display: "grid", gap: 14 }}>
+      <QuoteBar quote={quote} />
+      <QuoteBar quote={nlpQuote} tone="nlp" center hideAuthor />
+
       <Card>{pulse(96)}</Card>
 
       <Card>
@@ -114,13 +117,9 @@ export default function Home({ quote, nlpQuote, now, go, linkProps, compact }) {
 
       <Card><MonthCalendar now={now} compact /></Card>
 
-      <QuoteBar quote={quote} />
-
       {toolGrid(2, 15)}
 
       <QuickLinks {...linkProps} />
-
-      <QuoteBar quote={nlpQuote} tone="nlp" center hideAuthor />
     </div>
   );
 }
