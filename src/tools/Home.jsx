@@ -7,6 +7,8 @@ import { Icon } from "../components/icons.jsx";
 import QuickLinks from "../components/QuickLinks.jsx";
 import MonthCalendar from "../components/MonthCalendar.jsx";
 import AnalogClock from "../components/AnalogClock.jsx";
+import QuickActions from "../components/QuickActions.jsx";
+import TaskBoard from "../components/TaskBoard.jsx";
 
 const TOOLS = [
   { id: "tasks", icon: "tasks", title: "Nhiệm Vụ Ngày", desc: "Thói quen & việc cần làm" },
@@ -18,27 +20,33 @@ const TOOLS = [
 
 export default function Home({ quote, nlpQuote, now, go, linkProps, compact }) {
   const [habitMap, setHabitMap] = useState({});
+  const [tasks, setTasks] = useState([]);
   useEffect(() => {
     api.getNgay(todayKey(now)).then((d) => { if (d && d.habits) setHabitMap(d.habits); });
+    api.getTasks().then((t) => Array.isArray(t) && setTasks(t));
   }, [now]);
   const doneHabits = NGAY_HABITS.filter((k) => habitMap[k]).length;
   const habitPct = (doneHabits / NGAY_HABITS.length) * 100;
 
-  /* ---- chip thói quen ---- */
-  const HabitChip = ({ label }) => {
-    const done = !!habitMap[label];
-    return (
-      <div style={{ display: "flex", alignItems: "center", gap: 7, padding: "6px 9px", borderRadius: R.chip, background: done ? T.leafSoft : T.surfaceAlt, border: `1px solid ${done ? T.leaf : T.line}`, minWidth: 0 }}>
-        <span style={{ width: 17, height: 17, borderRadius: "50%", flexShrink: 0, display: "grid", placeItems: "center", background: done ? T.leaf : "transparent", border: done ? "none" : `1.5px solid ${T.faint}`, color: "#fff" }}>
-          {done && <Icon name="check" size={11} />}
-        </span>
-        <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: 12, fontWeight: done ? 700 : 600, color: done ? T.inkDeep : T.muted }}>{label}</span>
+  const addTask = async (name) => { const t = await api.addTask(name); setTasks((p) => [...p, t || { id: Date.now(), name, done: false }]); };
+  const toggleTask = (id) => setTasks((p) => { const n = p.map((t) => (t.id === id ? { ...t, done: !t.done } : t)); const it = n.find((x) => x.id === id); api.toggleTask(id, it.done); return n; });
+  const delTask = (id) => { setTasks((p) => p.filter((t) => t.id !== id)); api.deleteTask(id); };
+
+  /* ---- nhịp ngày (đồng hồ + tóm tắt thói quen) ---- */
+  const pulse = (clockSize) => (
+    <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+      <AnalogClock size={clockSize} />
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10 }}>
+          <div style={{ minWidth: 0 }}>
+            <Eyebrow>Nhịp ngày hôm nay</Eyebrow>
+            <div style={{ fontFamily: SERIF, fontSize: 19, fontWeight: 700, color: T.text, marginTop: 3 }}>{doneHabits}/{NGAY_HABITS.length} thói quen</div>
+          </div>
+          <SunRing pct={habitPct} size={52} />
+        </div>
+        <div style={{ marginTop: 9 }}><ProgressBar pct={habitPct} height={8} /></div>
+        <Btn variant="soft" onClick={() => go("tasks")} style={{ marginTop: 10, padding: "7px 13px", fontSize: 13 }}>Mở nhật ký</Btn>
       </div>
-    );
-  };
-  const chips = (min) => (
-    <div style={{ display: "grid", gridTemplateColumns: `repeat(auto-fill, minmax(${min}px,1fr))`, gap: 7 }}>
-      {NGAY_HABITS.map((k) => <HabitChip key={k} label={k} />)}
     </div>
   );
 
@@ -55,45 +63,38 @@ export default function Home({ quote, nlpQuote, now, go, linkProps, compact }) {
     </div>
   );
 
-  /* ====================== DESKTOP — gọn trong 1 màn ====================== */
+  /* ====================== DESKTOP ====================== */
   if (compact) {
     return (
       <div style={{ display: "grid", gap: 12 }}>
-        {/* lịch (trái) · đồng hồ + thói quen (phải) */}
+        {/* lịch (trái) · đồng hồ + thói quen + thao tác nhanh (phải) */}
         <Card style={{ padding: 0, overflow: "hidden" }}>
           <div style={{ display: "flex", alignItems: "stretch" }}>
-            <div style={{ flex: "1 1 0", minWidth: 320, padding: "16px 20px", borderRight: `1px solid ${T.line}` }}>
+            <div style={{ flex: "1 1 0", minWidth: 300, padding: "16px 20px", borderRight: `1px solid ${T.line}` }}>
               <MonthCalendar now={now} compact />
             </div>
-            <div style={{ flex: "1.12 1 0", minWidth: 360, padding: "16px 20px", display: "grid", gap: 12, alignContent: "start", background: `linear-gradient(150deg, ${T.surface}, ${T.surfaceAlt})` }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-                <AnalogClock size={112} />
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10 }}>
-                    <div style={{ minWidth: 0 }}>
-                      <Eyebrow>Nhịp ngày hôm nay</Eyebrow>
-                      <div style={{ fontFamily: SERIF, fontSize: 20, fontWeight: 700, color: T.text, marginTop: 3 }}>{doneHabits}/{NGAY_HABITS.length} thói quen đã xong</div>
-                    </div>
-                    <SunRing pct={habitPct} size={54} />
-                  </div>
-                  <div style={{ marginTop: 9 }}><ProgressBar pct={habitPct} height={8} /></div>
-                  <Btn variant="soft" onClick={() => go("tasks")} style={{ marginTop: 10, padding: "7px 13px", fontSize: 13 }}>Mở nhật ký</Btn>
-                </div>
+            <div style={{ flex: "1.12 1 0", minWidth: 360, padding: "16px 20px", display: "grid", gap: 13, alignContent: "start", background: `linear-gradient(150deg, ${T.surface}, ${T.surfaceAlt})` }}>
+              {pulse(104)}
+              <div>
+                <Eyebrow style={{ marginBottom: 8 }}>Thao tác nhanh</Eyebrow>
+                <QuickActions onAddTask={addTask} />
               </div>
-              {chips(150)}
             </div>
           </div>
         </Card>
 
         {toolGrid(5, 13)}
 
-        {/* truy cập nhanh (trái) · câu trích (phải) */}
-        <div style={{ display: "grid", gridTemplateColumns: "1.6fr 1fr", gap: 12, alignItems: "stretch" }}>
+        {/* nhiệm vụ cần làm (trái) · truy cập nhanh (phải) */}
+        <div style={{ display: "grid", gridTemplateColumns: "1.35fr 1fr", gap: 12, alignItems: "start" }}>
+          <TaskBoard tasks={tasks} onAdd={addTask} onToggle={toggleTask} onDelete={delTask} />
           <QuickLinks {...linkProps} />
-          <div style={{ display: "grid", gap: 12 }}>
-            <QuoteBar quote={quote} style={{ flex: 1 }} />
-            <QuoteBar quote={nlpQuote} tone="nlp" center hideAuthor style={{ flex: 1 }} />
-          </div>
+        </div>
+
+        {/* câu trích */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, alignItems: "stretch" }}>
+          <QuoteBar quote={quote} style={{ height: "100%" }} />
+          <QuoteBar quote={nlpQuote} tone="nlp" center hideAuthor style={{ height: "100%" }} />
         </div>
       </div>
     );
@@ -102,18 +103,14 @@ export default function Home({ quote, nlpQuote, now, go, linkProps, compact }) {
   /* ====================== MOBILE ====================== */
   return (
     <div style={{ display: "grid", gap: 14 }}>
+      <Card>{pulse(96)}</Card>
+
       <Card>
-        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-          <AnalogClock size={96} />
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <Eyebrow>Nhịp ngày hôm nay</Eyebrow>
-            <div style={{ fontSize: 17, fontWeight: 900, color: T.text, marginTop: 3 }}>{doneHabits}/{NGAY_HABITS.length} thói quen</div>
-            <div style={{ marginTop: 8 }}><ProgressBar pct={habitPct} height={8} /></div>
-          </div>
-        </div>
-        <div style={{ marginTop: 12 }}>{chips(150)}</div>
-        <Btn variant="soft" full onClick={() => go("tasks")} style={{ marginTop: 11 }}>Mở nhật ký</Btn>
+        <Eyebrow style={{ marginBottom: 10 }}>Thao tác nhanh</Eyebrow>
+        <QuickActions onAddTask={addTask} />
       </Card>
+
+      <TaskBoard tasks={tasks} onAdd={addTask} onToggle={toggleTask} onDelete={delTask} maxList={320} />
 
       <Card><MonthCalendar now={now} compact /></Card>
 
