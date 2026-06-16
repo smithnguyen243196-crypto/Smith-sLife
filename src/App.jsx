@@ -38,6 +38,8 @@ export default function App() {
   const isDesktop = useMediaQuery(`(min-width:${DESKTOP}px)`);
   const [theme, setTheme] = useState(() => (typeof document !== "undefined" && document.documentElement.dataset.theme) || "light");
   const isDark = theme === "dark";
+  const [navOpen, setNavOpen] = useState(() => { try { return localStorage.getItem("nls-nav") !== "0"; } catch (e) { return true; } });
+  const toggleNav = () => setNavOpen((v) => { const n = !v; try { localStorage.setItem("nls-nav", n ? "1" : "0"); } catch (e) {} return n; });
   const toggleTheme = () => setTheme((t) => {
     const n = t === "dark" ? "light" : "dark";
     document.documentElement.dataset.theme = n;
@@ -75,37 +77,47 @@ export default function App() {
   if (isDesktop) {
     return (
       <div style={{ minHeight: "100vh", background: T.canvas, fontFamily: FONT, color: T.text, display: "flex" }}>
-        <aside style={{ width: 268, flexShrink: 0, background: T.surface, borderRight: `1px solid ${T.line}`, height: "100vh", position: "sticky", top: 0, display: "flex", flexDirection: "column", padding: "22px 16px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 11, padding: "6px 12px 12px", borderRadius: R.ctrl, marginBottom: 12 }}>
-            <img src={AVATAR} alt="Smith" style={{ width: 46, height: 46, borderRadius: "50%", objectFit: "cover", border: `2px solid ${T.grainSoft}` }} />
-            <div style={{ minWidth: 0 }}>
-              <div style={{ fontSize: 11, color: T.muted, fontWeight: 700 }}>Xin chào</div>
-              <div style={{ fontSize: 15.5, fontWeight: 800, color: T.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Smith Nguyễn</div>
+        <aside style={{ width: navOpen ? 268 : 76, flexShrink: 0, background: T.surface, borderRight: `1px solid ${T.line}`, height: "100vh", position: "sticky", top: 0, display: "flex", flexDirection: "column", padding: navOpen ? "22px 16px" : "22px 12px", transition: "width .2s ease" }}>
+          {navOpen ? (
+            <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "0 4px 14px" }}>
+              <img src={AVATAR} alt="Smith" style={{ width: 44, height: 44, borderRadius: "50%", objectFit: "cover", border: `2px solid ${T.grainSoft}`, flexShrink: 0 }} />
+              <div style={{ minWidth: 0, flex: 1 }}>
+                <div style={{ fontSize: 11, color: T.muted, fontWeight: 700 }}>Xin chào</div>
+                <div style={{ fontSize: 15, fontWeight: 800, color: T.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Smith Nguyễn</div>
+              </div>
+              <button onClick={toggleNav} className="press" title="Thu gọn menu" aria-label="Thu gọn menu" style={{ flexShrink: 0, width: 34, height: 34, borderRadius: 9, border: `1px solid ${T.line}`, background: T.surfaceAlt, color: T.ink, cursor: "pointer", display: "grid", placeItems: "center" }}><Icon name="menu" size={18} /></button>
             </div>
-          </div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12, paddingBottom: 14 }}>
+              <button onClick={toggleNav} className="press" title="Mở rộng menu" aria-label="Mở rộng menu" style={{ width: 40, height: 40, borderRadius: 10, border: `1px solid ${T.line}`, background: T.surfaceAlt, color: T.ink, cursor: "pointer", display: "grid", placeItems: "center" }}><Icon name="menu" size={20} /></button>
+              <img src={AVATAR} alt="Smith" style={{ width: 40, height: 40, borderRadius: "50%", objectFit: "cover", border: `2px solid ${T.grainSoft}` }} />
+            </div>
+          )}
 
           <nav style={{ display: "grid", gap: 4 }}>
             {NAV.map((t) => {
               const on = view === t.id;
               return (
-                <button key={t.id} onClick={() => go(t.id)} className="press"
-                  style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 13px", borderRadius: R.ctrl, border: "none", cursor: "pointer", fontFamily: FONT, background: on ? T.inkSoft : "transparent", color: on ? T.inkDeep : T.muted, fontWeight: on ? 800 : 600, fontSize: 14.5, position: "relative", textAlign: "left" }}>
-                  {on && <span style={{ position: "absolute", left: 0, top: 9, bottom: 9, width: 3.5, borderRadius: 999, background: T.grain }} />}
-                  <Icon name={t.icon} size={21} /> {t.label}
+                <button key={t.id} onClick={() => go(t.id)} className="press" title={navOpen ? undefined : t.label}
+                  style={{ display: "flex", alignItems: "center", gap: 12, padding: navOpen ? "11px 13px" : "11px 0", justifyContent: navOpen ? "flex-start" : "center", borderRadius: R.ctrl, border: "none", cursor: "pointer", fontFamily: FONT, background: on ? T.inkSoft : "transparent", color: on ? T.inkDeep : T.muted, fontWeight: on ? 800 : 600, fontSize: 14.5, position: "relative", textAlign: "left" }}>
+                  {on && navOpen && <span style={{ position: "absolute", left: 0, top: 9, bottom: 9, width: 3.5, borderRadius: 999, background: T.grain }} />}
+                  <Icon name={t.icon} size={21} /> {navOpen && t.label}
                 </button>
               );
             })}
           </nav>
 
           <div style={{ marginTop: "auto" }}>
-            <button onClick={toggleTheme} className="press"
-              style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "10px 13px", borderRadius: R.ctrl, border: `1px solid ${T.line}`, background: T.surfaceAlt, color: T.text, cursor: "pointer", fontFamily: FONT, fontWeight: 700, fontSize: 13.5, marginBottom: 14 }}>
-              <Icon name={isDark ? "sun" : "moon"} size={18} /> {isDark ? "Chế độ sáng" : "Chế độ tối"}
+            <button onClick={toggleTheme} className="press" title={isDark ? "Chế độ sáng" : "Chế độ tối"}
+              style={{ display: "flex", alignItems: "center", justifyContent: navOpen ? "flex-start" : "center", gap: 10, width: "100%", padding: navOpen ? "10px 13px" : "10px 0", borderRadius: R.ctrl, border: `1px solid ${T.line}`, background: T.surfaceAlt, color: T.text, cursor: "pointer", fontFamily: FONT, fontWeight: 700, fontSize: 13.5, marginBottom: 14 }}>
+              <Icon name={isDark ? "sun" : "moon"} size={18} /> {navOpen && (isDark ? "Chế độ sáng" : "Chế độ tối")}
             </button>
-            <div style={{ fontSize: 11.5, color: T.faint, padding: "0 6px", lineHeight: 1.5 }}>
-              <div style={{ fontWeight: 800, color: T.grain, letterSpacing: ".1em", marginBottom: 4 }}>NLP · 2026</div>
-              Gieo đúng giống, đúng thời — gặt đúng mùa.
-            </div>
+            {navOpen && (
+              <div style={{ fontSize: 11.5, color: T.faint, padding: "0 6px", lineHeight: 1.5 }}>
+                <div style={{ fontWeight: 800, color: T.grain, letterSpacing: ".1em", marginBottom: 4 }}>NLP · 2026</div>
+                Gieo đúng giống, đúng thời — gặt đúng mùa.
+              </div>
+            )}
           </div>
         </aside>
 
