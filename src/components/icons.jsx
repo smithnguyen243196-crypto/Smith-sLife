@@ -28,6 +28,16 @@ export function Icon({ name, size = 24, ...p }) {
     cog: (<><circle cx="12" cy="12" r="3" /><path d="M12 2.5l1.3 2.2 2.5-.5.3 2.5 2.2 1.2-1 2.4 1 2.4-2.2 1.2-.3 2.5-2.5-.5L12 21.5l-1.3-2.2-2.5.5-.3-2.5-2.2-1.2 1-2.4-1-2.4 2.2-1.2.3-2.5 2.5.5z" /></>),
     moon: (<><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z" /></>),
     dawn: (<><path d="M3 18h18" /><path d="M7.5 18a4.5 4.5 0 0 1 9 0" /><path d="M12 6.5V4M5.5 9l-1.4-1.4M18.5 9l1.4-1.4M3 13.5h2M19 13.5h2" /></>),
+    // Bán hàng — giỏ hàng
+    cart: (<><circle cx="9" cy="20" r="1.3" /><circle cx="17" cy="20" r="1.3" /><path d="M3 4h2l2.2 11.2a1 1 0 0 0 1 .8h8a1 1 0 0 0 1-.85L19.5 8H6" /></>),
+    // Hoá đơn — biên lai
+    invoice: (<><path d="M7 3.5h10v16l-1.7-1.1-1.6 1.1-1.7-1.1-1.7 1.1-1.6-1.1L7 19.5z" /><path d="M9.5 8h5M9.5 11h5M9.5 14h3" /></>),
+    // Khách hàng — nhóm người
+    users: (<><circle cx="9" cy="8.5" r="3" /><path d="M3.5 19a5.5 5.5 0 0 1 11 0" /><path d="M15.5 6.2a3 3 0 0 1 0 5.6" /><path d="M17 13.4a5.5 5.5 0 0 1 3.5 5.1" /></>),
+    // Báo cáo — biểu đồ cột
+    report: (<><rect x="4" y="4" width="16" height="16" rx="2.5" /><path d="M8 15.5v-3M12 15.5V9M16 15.5v-5" /></>),
+    // Lịch
+    calendar: (<><rect x="4" y="5" width="16" height="15" rx="2.5" /><path d="M4 9.5h16M8 3.5v3M16 3.5v3" /></>),
   }[name];
   return (<svg viewBox="0 0 24 24" width={size} height={size} {...S} {...p}>{paths}</svg>);
 }
