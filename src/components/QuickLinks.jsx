@@ -12,12 +12,11 @@ const domainOf = (url) => (url ? url.replace(/^https?:\/\//, "").replace(/\/.*$/
 // Thẻ liên kết — cùng dáng với thẻ công cụ
 function LinkCard({ item, retailer }) {
   const url = resolveUrl(item, retailer);
-  const color = item.color || T.ink;
   return (
     <button onClick={() => openLink(url)} className="lift press"
       style={{ position: "relative", textAlign: "left", background: T.surface, border: `1px solid ${T.line}`, borderRadius: R.card, padding: 15, cursor: "pointer", fontFamily: FONT, boxShadow: T.shadowSm, minWidth: 0 }}>
       <span style={{ position: "absolute", top: 13, right: 13, color: T.faint, display: "flex" }}><Icon name="external" size={15} /></span>
-      <div style={{ width: 46, height: 46, borderRadius: 13, background: `${color}1A`, color, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 11 }}>
+      <div style={{ width: 46, height: 46, borderRadius: 13, background: T.inkSoft, color: T.ink, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 11 }}>
         {item.iconName ? <Icon name={item.iconName} size={25} /> : <span style={{ fontSize: 22, lineHeight: 1 }}>{item.icon || "🔗"}</span>}
       </div>
       <div style={{ fontWeight: 800, fontSize: 15, color: T.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.label}</div>
