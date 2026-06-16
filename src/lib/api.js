@@ -28,4 +28,12 @@ export const api = {
   getVi: () => j("/api/vi").catch(() => []),
   addVi: (tx) => j("/api/vi", { method: "POST", body: JSON.stringify(tx) }).catch(() => null),
   deleteVi: (id) => j(`/api/vi?id=${id}`, { method: "DELETE" }).catch(() => null),
+
+  // Ghi Chú (Upstash — đồng bộ desktop/mobile tức thì)
+  getNotes: () => j("/api/notes").catch(() => null),
+  saveNotes: (notes) => j("/api/notes", { method: "POST", body: JSON.stringify({ notes }) }).catch(() => null),
+
+  // Truy cập nhanh (KiotViet + liên kết) — Upstash
+  getLinks: () => j("/api/links").catch(() => null),
+  saveLinks: (cfg) => j("/api/links", { method: "POST", body: JSON.stringify(cfg) }).catch(() => null),
 };
