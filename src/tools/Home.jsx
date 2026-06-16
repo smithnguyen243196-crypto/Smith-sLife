@@ -21,15 +21,17 @@ const TOOLS = [
 export default function Home({ quote, nlpQuote, now, go, linkProps, compact }) {
   const [habitMap, setHabitMap] = useState({});
   const [tasks, setTasks] = useState([]);
+  const [projects, setProjects] = useState([]);
   useEffect(() => {
     api.getNgay(todayKey(now)).then((d) => { if (d && d.habits) setHabitMap(d.habits); });
     api.getTasks().then((t) => Array.isArray(t) && setTasks(t));
+    api.getProjects().then((p) => Array.isArray(p) && setProjects(p));
   }, [now]);
   const doneHabits = NGAY_HABITS.filter((k) => habitMap[k]).length;
   const habitPct = (doneHabits / NGAY_HABITS.length) * 100;
 
-  const addTask = async (name) => { const t = await api.addTask(name); setTasks((p) => [...p, t || { id: Date.now(), name, done: false }]); };
-  const toggleTask = (id) => setTasks((p) => { const n = p.map((t) => (t.id === id ? { ...t, done: !t.done } : t)); const it = n.find((x) => x.id === id); api.toggleTask(id, it.done); return n; });
+  const addTask = async (name, projectId, due) => { const t = await api.addTask(name, projectId, due); setTasks((p) => [...p, t || { id: Date.now(), name, done: false, due: due || null, doneDate: null, projectId: projectId || null }]); };
+  const toggleTask = (id) => setTasks((p) => { const today = new Date().toISOString().slice(0, 10); const n = p.map((t) => (t.id === id ? { ...t, done: !t.done, doneDate: !t.done ? today : null } : t)); const it = n.find((x) => x.id === id); api.toggleTask(id, it.done); return n; });
   const delTask = (id) => { setTasks((p) => p.filter((t) => t.id !== id)); api.deleteTask(id); };
 
   /* ---- nhịp ngày (đồng hồ + tóm tắt thói quen) ---- */
@@ -83,7 +85,7 @@ export default function Home({ quote, nlpQuote, now, go, linkProps, compact }) {
               {pulse(104)}
               <div>
                 <Eyebrow style={{ marginBottom: 8 }}>Thao tác nhanh</Eyebrow>
-                <QuickActions onAddTask={addTask} />
+                <QuickActions onAddTask={addTask} projects={projects} />
               </div>
             </div>
           </div>
@@ -93,7 +95,7 @@ export default function Home({ quote, nlpQuote, now, go, linkProps, compact }) {
 
         {/* nhiệm vụ cần làm (trái) · truy cập nhanh (phải) */}
         <div style={{ display: "grid", gridTemplateColumns: "1.35fr 1fr", gap: 12, alignItems: "start" }}>
-          <TaskBoard tasks={tasks} onAdd={addTask} onToggle={toggleTask} onDelete={delTask} />
+          <TaskBoard tasks={tasks} projects={projects} onAdd={addTask} onToggle={toggleTask} onDelete={delTask} />
           <QuickLinks {...linkProps} />
         </div>
       </div>
@@ -110,10 +112,10 @@ export default function Home({ quote, nlpQuote, now, go, linkProps, compact }) {
 
       <Card>
         <Eyebrow style={{ marginBottom: 10 }}>Thao tác nhanh</Eyebrow>
-        <QuickActions onAddTask={addTask} />
+        <QuickActions onAddTask={addTask} projects={projects} />
       </Card>
 
-      <TaskBoard tasks={tasks} onAdd={addTask} onToggle={toggleTask} onDelete={delTask} maxList={320} />
+      <TaskBoard tasks={tasks} projects={projects} onAdd={addTask} onToggle={toggleTask} onDelete={delTask} maxList={320} />
 
       <Card><MonthCalendar now={now} compact /></Card>
 
