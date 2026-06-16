@@ -13,11 +13,15 @@ export default function TaskBoard({ tasks, projects = [], onAdd, onEdit, onToggl
   const [due, setDue] = useState(todayD());
   const [note, setNote] = useState("");
   const [edit, setEdit] = useState(null); // task đang sửa
+  const [hideDone, setHideDone] = useState(false);
   const projName = (id) => projects.find((p) => p.id === id)?.name;
 
   const add = () => { const n = name.trim(); if (!n) return; onAdd(n, projectId || null, due || null, note.trim() || ""); setName(""); setNote(""); };
   const saveEdit = () => { if (!edit.name.trim()) return; onEdit(edit.id, { name: edit.name.trim(), projectId: edit.projectId || null, due: edit.due || null, note: edit.note || "" }); setEdit(null); };
   const done = tasks.filter((t) => t.done).length;
+  // việc xong xuống dưới (giữ thứ tự trong từng nhóm)
+  const ordered = [...tasks].sort((a, b) => (a.done === b.done ? 0 : a.done ? 1 : -1));
+  const visible = hideDone ? ordered.filter((t) => !t.done) : ordered;
 
   const selStyle = { ...inputStyle, padding: "11px 10px" };
 
@@ -30,6 +34,12 @@ export default function TaskBoard({ tasks, projects = [], onAdd, onEdit, onToggl
           <div style={{ fontSize: 12.5, color: T.muted, fontWeight: 600, marginTop: 1 }}>Việc trong ngày & theo dự án</div>
         </div>
         <span style={{ flexShrink: 0, fontSize: 13, fontWeight: 800, color: T.inkDeep, background: T.inkSoft, padding: "5px 12px", borderRadius: 999 }}>{done}/{tasks.length}</span>
+        {done > 0 && (
+          <button onClick={() => setHideDone((v) => !v)} className="press" title={hideDone ? "Hiện việc đã xong" : "Ẩn việc đã xong"}
+            style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 5, padding: "6px 11px", borderRadius: 999, border: `1px solid ${T.line}`, background: T.surfaceAlt, color: T.muted, cursor: "pointer", fontFamily: "inherit", fontWeight: 700, fontSize: 12 }}>
+            <Icon name={hideDone ? "eye" : "eyeOff"} size={15} /> {hideDone ? `Hiện (${done})` : "Ẩn đã xong"}
+          </button>
+        )}
       </div>
 
       {/* Thêm nhiệm vụ */}
@@ -48,8 +58,8 @@ export default function TaskBoard({ tasks, projects = [], onAdd, onEdit, onToggl
 
       {/* Danh sách */}
       <div style={{ display: "grid", gap: 8, maxHeight: maxList, overflowY: "auto" }}>
-        {tasks.length === 0 && <EmptyState>Chưa có nhiệm vụ nào.</EmptyState>}
-        {tasks.map((t) => {
+        {visible.length === 0 && <EmptyState>{hideDone && tasks.length ? "Đã ẩn việc hoàn thành." : "Chưa có nhiệm vụ nào."}</EmptyState>}
+        {visible.map((t) => {
           const pn = projName(t.projectId);
           const pc = projectColor(t.projectId) || T.line;
           return (
