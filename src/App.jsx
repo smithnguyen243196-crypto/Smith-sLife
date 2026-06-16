@@ -66,12 +66,13 @@ export default function App() {
   const saveLinks = (cfg) => { setLinks(cfg); api.saveLinks(cfg); };
   const go = (v) => setView(v);
   const linkProps = { cfg: links, onChange: saveLinks };
+  const fullBleed = view === "home" || view === "kiemket"; // màn hình dashboard trải rộng
 
   const screen = (
     <div key={view} className="rise">
       {view === "home" && <Home quote={quote} nlpQuote={nlpQuote} now={now} go={go} linkProps={linkProps} compact={isDesktop} />}
       {view === "tasks" && <TasksTool quote={quote} now={now} />}
-      {view === "kiemket" && <KiemKetTool quote={quote} now={now} linkCfg={links} />}
+      {view === "kiemket" && <KiemKetTool quote={quote} now={now} linkCfg={links} wide={isDesktop} />}
       {view === "tinhlai" && <TinhLaiTool quote={quote} now={now} />}
       {view === "vi" && <ViTool quote={quote} />}
       {view === "notes" && <NotesTool quote={quote} />}
@@ -119,7 +120,7 @@ export default function App() {
         </aside>
 
         <main style={{ flex: 1, minWidth: 0, overflowY: "auto", height: "100vh" }}>
-          <div style={{ maxWidth: 700, margin: "0 auto", padding: "30px 28px 60px" }}>{screen}</div>
+          <div style={{ maxWidth: fullBleed ? 1360 : 780, margin: "0 auto", padding: fullBleed ? "28px 36px 64px" : "30px 30px 64px" }}>{screen}</div>
         </main>
       </div>
     );
