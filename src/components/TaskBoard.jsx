@@ -1,11 +1,13 @@
 import React, { useState } from "react";
 import { T, R, SERIF } from "../lib/theme.js";
 import { projectColor } from "../lib/config.js";
-import { Card, Btn, IconBtn, EmptyState, inputStyle, Modal, Field } from "./ui.jsx";
+import { Card, Btn, IconBtn, EmptyState, inputStyle } from "./ui.jsx";
 import { Icon } from "./icons.jsx";
+import TaskModal from "./TaskModal.jsx";
 
 const todayD = () => new Date().toISOString().slice(0, 10);
 const fmtD = (s) => { if (!s) return ""; const p = s.split("-"); return p.length >= 3 ? `${p[2]}/${p[1]}` : s; };
+const fmtRange = (s, e) => (e && e !== s ? `${fmtD(s)} → ${fmtD(e)}` : fmtD(s));
 
 export default function TaskBoard({ tasks, projects = [], onAdd, onEdit, onToggle, onDelete, maxList = 340, featured }) {
   const [name, setName] = useState("");
@@ -17,7 +19,7 @@ export default function TaskBoard({ tasks, projects = [], onAdd, onEdit, onToggl
   const projName = (id) => projects.find((p) => p.id === id)?.name;
 
   const add = () => { const n = name.trim(); if (!n) return; onAdd(n, projectId || null, due || null, note.trim() || ""); setName(""); setNote(""); };
-  const saveEdit = () => { if (!edit.name.trim()) return; onEdit(edit.id, { name: edit.name.trim(), projectId: edit.projectId || null, due: edit.due || null, note: edit.note || "" }); setEdit(null); };
+  const saveEdit = (fields) => { onEdit(edit.id, fields); setEdit(null); };
   const done = tasks.filter((t) => t.done).length;
   // việc xong xuống dưới (giữ thứ tự trong từng nhóm)
   const ordered = [...tasks].sort((a, b) => (a.done === b.done ? 0 : a.done ? 1 : -1));
@@ -71,13 +73,13 @@ export default function TaskBoard({ tasks, projects = [], onAdd, onEdit, onToggl
                 {(pn || t.due || t.doneDate) && (
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 5, alignItems: "center" }}>
                     {pn && <span style={{ fontSize: 11, fontWeight: 700, color: "#fff", background: pc, padding: "2px 9px", borderRadius: 999 }}>{pn}</span>}
-                    {t.due && <span style={{ fontSize: 11, fontWeight: 600, color: T.muted, display: "inline-flex", alignItems: "center", gap: 3 }} title="Ngày thực hiện"><Icon name="calendar" size={12} /> {fmtD(t.due)}</span>}
+                    {t.due && <span style={{ fontSize: 11, fontWeight: 600, color: T.muted, display: "inline-flex", alignItems: "center", gap: 3 }} title={t.dueEnd ? "Khoảng thực hiện" : "Ngày thực hiện"}><Icon name="calendar" size={12} /> {fmtRange(t.due, t.dueEnd)}</span>}
                     {t.doneDate && <span style={{ fontSize: 11, fontWeight: 700, color: T.success, display: "inline-flex", alignItems: "center", gap: 3 }} title="Ngày hoàn thành"><Icon name="check" size={12} /> {fmtD(t.doneDate)}</span>}
                   </div>
                 )}
               </div>
               <div style={{ display: "flex", gap: 2, flexShrink: 0 }}>
-                <IconBtn icon="edit" onClick={() => setEdit({ id: t.id, name: t.name, projectId: t.projectId || "", due: t.due || "", note: t.note || "" })} title="Sửa" color={T.ink} size={16} />
+                <IconBtn icon="edit" onClick={() => setEdit({ id: t.id, name: t.name, projectId: t.projectId || "", due: t.due || "", dueEnd: t.dueEnd || "", note: t.note || "" })} title="Sửa" color={T.ink} size={16} />
                 <IconBtn icon="trash" onClick={() => onDelete(t.id)} title="Xoá" color={T.danger} size={16} />
               </div>
             </div>
@@ -86,29 +88,7 @@ export default function TaskBoard({ tasks, projects = [], onAdd, onEdit, onToggl
       </div>
 
       {/* Sửa nhiệm vụ */}
-      <Modal open={!!edit} title="Sửa nhiệm vụ" onClose={() => setEdit(null)}>
-        {edit && (
-          <div style={{ display: "grid", gap: 10 }}>
-            <input style={inputStyle} placeholder="Tên nhiệm vụ" value={edit.name} onChange={(e) => setEdit((f) => ({ ...f, name: e.target.value }))} />
-            <Field label="Ghi chú">
-              <textarea rows={3} style={{ ...inputStyle, resize: "vertical", lineHeight: 1.5 }} placeholder="Ghi chú..." value={edit.note} onChange={(e) => setEdit((f) => ({ ...f, note: e.target.value }))} />
-            </Field>
-            <Field label="Dự án">
-              <select value={edit.projectId} onChange={(e) => setEdit((f) => ({ ...f, projectId: e.target.value }))} style={selStyle}>
-                <option value="">— Dự án —</option>
-                {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-              </select>
-            </Field>
-            <Field label="Ngày thực hiện">
-              <input type="date" value={edit.due} onChange={(e) => setEdit((f) => ({ ...f, due: e.target.value }))} style={inputStyle} />
-            </Field>
-            <div style={{ display: "flex", gap: 9 }}>
-              <Btn variant="ghost" onClick={() => setEdit(null)} style={{ flex: 1 }}>Huỷ</Btn>
-              <Btn variant="primary" onClick={saveEdit} style={{ flex: 2 }}>Lưu</Btn>
-            </div>
-          </div>
-        )}
-      </Modal>
+      <TaskModal open={!!edit} mode="edit" value={edit} projects={projects} onClose={() => setEdit(null)} onSubmit={saveEdit} />
     </Card>
   );
 }
