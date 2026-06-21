@@ -5,6 +5,8 @@ import { NGAY_HABITS, MORNING_Q, EVENING_Q } from "../lib/config.js";
 import { api } from "../lib/api.js";
 import { Card, SectionTitle, QuoteBar, SunArc, ProgressBar, Collapsible, Btn, IconBtn, EmptyState, inputStyle } from "../components/ui.jsx";
 import { Icon } from "../components/icons.jsx";
+import TaskCalendar from "../components/TaskCalendar.jsx";
+import TaskBoard from "../components/TaskBoard.jsx";
 
 export default function TasksTool({ quote, now }) {
   const dk = todayKey(now);
@@ -12,9 +14,7 @@ export default function TasksTool({ quote, now }) {
   const [morning, setMorning] = useState(MORNING_Q.map(() => ""));
   const [evening, setEvening] = useState(EVENING_Q.map(() => ""));
   const [tasks, setTasks] = useState([]);
-  const [newTask, setNewTask] = useState("");
   const [projects, setProjects] = useState([]);
-  const [projectId, setProjectId] = useState("");
 
   useEffect(() => {
     api.getNgay(dk).then((d) => {
@@ -31,8 +31,13 @@ export default function TasksTool({ quote, now }) {
   const habitPct = habits.length ? (habits.filter((h) => h.done).length / habits.length) * 100 : 0;
 
   const toggleHabit = (i) => setHabits((p) => { const n = p.map((x, j) => (j === i ? { ...x, done: !x.done } : x)); api.tickHabit(dk, n[i].name, n[i].done); return n; });
-  const addTask = async () => { if (!newTask.trim()) return; const t = await api.addTask(newTask.trim(), projectId || undefined); setTasks((p) => [...p, t || { id: Date.now(), name: newTask.trim(), done: false }]); setNewTask(""); };
-  const toggleTask = (id) => setTasks((p) => { const n = p.map((t) => (t.id === id ? { ...t, done: !t.done } : t)); api.toggleTask(id, n.find((x) => x.id === id).done); return n; });
+
+  const addTask = async (name, projectId, due, note, dueEnd) => {
+    const t = await api.addTask(name, projectId || null, due || null, note || "", dueEnd || null);
+    setTasks((p) => [...p, t || { id: Date.now(), name, done: false, due: due || null, dueEnd: dueEnd || null, doneDate: null, projectId: projectId || null, note: note || "" }]);
+  };
+  const editTask = (id, fields) => { setTasks((p) => p.map((t) => (t.id === id ? { ...t, ...fields } : t))); api.updateTask(id, fields); };
+  const toggleTask = (id) => setTasks((p) => { const today = new Date().toISOString().slice(0, 10); const n = p.map((t) => (t.id === id ? { ...t, done: !t.done, doneDate: !t.done ? today : null } : t)); const it = n.find((x) => x.id === id); api.toggleTask(id, it.done); return n; });
   const delTask = (id) => { setTasks((p) => p.filter((t) => t.id !== id)); api.deleteTask(id); };
 
   const QA = (qs, arr, set, kind) => (
@@ -78,29 +83,9 @@ export default function TasksTool({ quote, now }) {
         </div>
       </Card>
 
-      <Card>
-        <SectionTitle icon="check">Nhiệm vụ hôm nay</SectionTitle>
-        {projects.length > 0 && (
-          <select value={projectId} onChange={(e) => setProjectId(e.target.value)} style={{ ...inputStyle, marginBottom: 8 }}>
-            <option value="">— Không gắn dự án —</option>
-            {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-          </select>
-        )}
-        <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
-          <input value={newTask} onChange={(e) => setNewTask(e.target.value)} onKeyDown={(e) => e.key === "Enter" && addTask()} placeholder="Thêm nhiệm vụ..." style={inputStyle} />
-          <Btn onClick={addTask} variant="accent"><Icon name="plus" size={18} /></Btn>
-        </div>
-        <div style={{ display: "grid", gap: 8 }}>
-          {tasks.length === 0 && <EmptyState>Chưa có nhiệm vụ.</EmptyState>}
-          {tasks.map((t) => (
-            <div key={t.id} style={{ display: "flex", alignItems: "center", gap: 11, padding: "10px 13px", borderRadius: R.ctrl, background: t.done ? T.inkSoft : T.surfaceAlt, border: `1px solid ${t.done ? "transparent" : T.line}` }}>
-              <input type="checkbox" checked={t.done} onChange={() => toggleTask(t.id)} style={{ width: 19, height: 19, accentColor: T.ink, flexShrink: 0 }} />
-              <span style={{ flex: 1, fontSize: 14.5, fontWeight: 600, textDecoration: t.done ? "line-through" : "none", color: t.done ? T.muted : T.text }}>{t.name}</span>
-              <IconBtn icon="trash" onClick={() => delTask(t.id)} title="Xoá" color={T.danger} size={17} />
-            </div>
-          ))}
-        </div>
-      </Card>
+      <TaskCalendar tasks={tasks} projects={projects} onAdd={addTask} onEdit={editTask} onToggle={toggleTask} />
+
+      <TaskBoard tasks={tasks} projects={projects} onAdd={addTask} onEdit={editTask} onToggle={toggleTask} onDelete={delTask} maxList={420} />
 
       <Collapsible title="Câu hỏi cuối ngày" icon="🌙">{QA(EVENING_Q, evening, setEvening, "evening")}</Collapsible>
     </div>
