@@ -24,7 +24,7 @@ export default function Home({ quote, nlpQuote, now, go, linkProps, compact }) {
   const habitPct = (doneHabits / NGAY_HABITS.length) * 100;
   const todayPerfect = habitPct >= 80; // perfect day = hoàn thành >= 80% thói quen
 
-  const addTask = async (name, projectId, due, note) => { const t = await api.addTask(name, projectId, due, note); setTasks((p) => [...p, t || { id: Date.now(), name, done: false, due: due || null, doneDate: null, projectId: projectId || null, note: note || "" }]); };
+  const addTask = async (name, projectId, due, note, dueEnd) => { const t = await api.addTask(name, projectId, due, note, dueEnd); setTasks((p) => [...p, t || { id: Date.now(), name, done: false, due: due || null, dueEnd: dueEnd || null, doneDate: null, projectId: projectId || null, note: note || "" }]); };
   const editTask = (id, fields) => { setTasks((p) => p.map((t) => (t.id === id ? { ...t, ...fields } : t))); api.updateTask(id, fields); };
   const toggleTask = (id) => setTasks((p) => { const today = new Date().toISOString().slice(0, 10); const n = p.map((t) => (t.id === id ? { ...t, done: !t.done, doneDate: !t.done ? today : null } : t)); const it = n.find((x) => x.id === id); api.toggleTask(id, it.done); return n; });
   const delTask = (id) => { setTasks((p) => p.filter((t) => t.id !== id)); api.deleteTask(id); };
