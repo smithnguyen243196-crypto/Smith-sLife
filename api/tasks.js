@@ -38,6 +38,7 @@ export default async function handler(req, res) {
         name: txt(p.properties[T.title]?.title),
         done: !!p.properties[T.done]?.checkbox,
         due: p.properties[T.due]?.date?.start || null,
+        dueEnd: p.properties[T.due]?.date?.end || null,
         doneDate: p.properties[T.doneDate]?.date?.start || null,
         projectId: p.properties[T.project]?.relation?.[0]?.id || null,
         note: NP ? txt(p.properties[NP]?.rich_text) : (kv[p.id] || ""),
@@ -46,19 +47,20 @@ export default async function handler(req, res) {
     }
 
     if (req.method === "POST") {
-      const { name, projectId, due, note } = await readBody(req);
+      const { name, projectId, due, dueEnd, note } = await readBody(req);
       const startDate = due || today();
+      const validEnd = dueEnd && dueEnd > startDate ? dueEnd : null; // end phải sau start mới là khoảng
       const props = {
         [T.title]: { title: title(name) },
         [T.status]: { select: { name: "Hoạt Động" } },
         [T.done]: { checkbox: false },
-        [T.due]: { date: { start: startDate } },
+        [T.due]: { date: { start: startDate, ...(validEnd ? { end: validEnd } : {}) } },
       };
       if (projectId) props[T.project] = { relation: [{ id: projectId }] };
       if (NP && note) props[NP] = { rich_text: rich(note) };
       const created = await createPage(DS(), props);
       if (!NP && note) { const m = (await kvGet(NOTE_KEY)) || {}; m[created.id] = note; await kvSet(NOTE_KEY, m); }
-      return json(res, 200, { id: created.id, name, done: false, due: startDate, doneDate: null, projectId: projectId || null, note: note || "" });
+      return json(res, 200, { id: created.id, name, done: false, due: startDate, dueEnd: validEnd, doneDate: null, projectId: projectId || null, note: note || "" });
     }
 
     if (req.method === "PATCH") {
@@ -66,7 +68,15 @@ export default async function handler(req, res) {
       const props = {};
       if (b.done !== undefined) { props[T.done] = { checkbox: !!b.done }; props[T.doneDate] = b.done ? { date: { start: today() } } : { date: null }; }
       if (b.name !== undefined) props[T.title] = { title: title(b.name) };
-      if (b.due !== undefined) props[T.due] = { date: b.due ? { start: b.due } : null };
+      if (b.due !== undefined || b.dueEnd !== undefined) {
+        const start = b.due !== undefined ? b.due : undefined;
+        // Đổi ngày: gửi kèm cả due và dueEnd. start rỗng -> xoá ngày.
+        if (b.due !== undefined && !b.due) props[T.due] = { date: null };
+        else if (start) {
+          const end = b.dueEnd && b.dueEnd > start ? b.dueEnd : null;
+          props[T.due] = { date: { start, ...(end ? { end } : {}) } };
+        }
+      }
       if (b.projectId !== undefined) props[T.project] = { relation: b.projectId ? [{ id: b.projectId }] : [] };
       if (b.note !== undefined && NP) props[NP] = { rich_text: rich(b.note) };
       if (Object.keys(props).length) await updatePage(b.id, props);
