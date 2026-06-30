@@ -8,7 +8,7 @@ import { Icon } from "./icons.jsx";
 const nowLocal = () => { const d = new Date(); const z = new Date(d.getTime() - d.getTimezoneOffset() * 60000); return z.toISOString().slice(0, 16); };
 
 // onAddTask(name): thêm nhiệm vụ (do trang chủ quản lý để danh sách cập nhật ngay)
-export default function QuickActions({ onAddTask, projects = [] }) {
+export default function QuickActions({ onAddTask, projects = [], compact }) {
   const [modal, setModal] = useState(null);
   const [busy, setBusy] = useState(false);
   const [okMsg, setOkMsg] = useState("");
@@ -49,15 +49,17 @@ export default function QuickActions({ onAddTask, projects = [] }) {
 
   return (
     <>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: compact ? 6 : 8 }}>
         {ACTIONS.map((a) => (
           <button key={a.id} onClick={() => setModal(a.id)} className="lift press"
-            style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, padding: "11px 8px", borderRadius: R.ctrl, border: `1px solid ${T.line}`, background: T.surface, cursor: "pointer", fontFamily: FONT, boxShadow: T.shadowSm }}>
-            <span style={{ position: "relative", width: 34, height: 34, borderRadius: 10, display: "grid", placeItems: "center", background: T.inkSoft, color: a.tint }}>
-              <Icon name={a.icon} size={20} />
-              <span style={{ position: "absolute", right: -4, bottom: -4, width: 16, height: 16, borderRadius: "50%", background: a.tint, color: "#fff", display: "grid", placeItems: "center", border: `2px solid ${T.surface}` }}><Icon name="plus" size={10} /></span>
+            style={compact
+              ? { display: "flex", alignItems: "center", gap: 6, padding: "7px 8px", borderRadius: R.ctrl, border: `1px solid ${T.line}`, background: T.surface, cursor: "pointer", fontFamily: FONT, boxShadow: T.shadowSm }
+              : { display: "flex", flexDirection: "column", alignItems: "center", gap: 6, padding: "11px 8px", borderRadius: R.ctrl, border: `1px solid ${T.line}`, background: T.surface, cursor: "pointer", fontFamily: FONT, boxShadow: T.shadowSm }}>
+            <span style={{ position: "relative", width: compact ? 24 : 34, height: compact ? 24 : 34, borderRadius: compact ? 7 : 10, display: "grid", placeItems: "center", background: T.inkSoft, color: a.tint, flexShrink: 0 }}>
+              <Icon name={a.icon} size={compact ? 14 : 20} />
+              {!compact && <span style={{ position: "absolute", right: -4, bottom: -4, width: 16, height: 16, borderRadius: "50%", background: a.tint, color: "#fff", display: "grid", placeItems: "center", border: `2px solid ${T.surface}` }}><Icon name="plus" size={10} /></span>}
             </span>
-            <span style={{ fontSize: 11.5, fontWeight: 700, color: T.text, textAlign: "center", lineHeight: 1.2 }}>{a.label}</span>
+            <span style={{ fontSize: compact ? 10.5 : 11.5, fontWeight: 700, color: T.text, textAlign: compact ? "left" : "center", lineHeight: 1.2, minWidth: 0, overflow: compact ? "hidden" : "visible", textOverflow: compact ? "ellipsis" : "clip", whiteSpace: compact ? "nowrap" : "normal" }}>{compact ? a.label.replace("Thêm ", "") : a.label}</span>
           </button>
         ))}
       </div>

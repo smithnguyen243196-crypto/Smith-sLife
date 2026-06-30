@@ -4,21 +4,32 @@ import { NGAY_HABITS } from "../lib/config.js";
 import { api } from "../lib/api.js";
 import { Card, Eyebrow, QuoteBar, SunRing, ProgressBar, Btn } from "../components/ui.jsx";
 import QuickLinks from "../components/QuickLinks.jsx";
-import MonthCalendar from "../components/MonthCalendar.jsx";
+import TaskCalendar from "../components/TaskCalendar.jsx";
 import AnalogClock from "../components/AnalogClock.jsx";
 import QuickActions from "../components/QuickActions.jsx";
 import TaskBoard from "../components/TaskBoard.jsx";
+
+// Thói quen muốn đếm chuỗi riêng (tên phải khớp NGAY_HABITS)
+const STREAK_HABITS = [
+  { key: "reading", label: "Đọc sách", habit: "📚 Đọc sách" },
+  { key: "meditate", label: "Thiền", habit: "🧘 Thiền" },
+  { key: "exercise", label: "Tập thể dục", habit: "💪 Tập thể dục" },
+];
 
 export default function Home({ quote, nlpQuote, now, go, linkProps, compact }) {
   const [habitMap, setHabitMap] = useState({});
   const [tasks, setTasks] = useState([]);
   const [projects, setProjects] = useState([]);
   const [streak, setStreak] = useState(0);
+  const [habitStreaks, setHabitStreaks] = useState({});
   useEffect(() => {
     api.getNgay(todayKey(now)).then((d) => { if (d && d.habits) setHabitMap(d.habits); });
     api.getTasks().then((t) => Array.isArray(t) && setTasks(t));
     api.getProjects().then((p) => Array.isArray(p) && setProjects(p));
     api.getStreak(NGAY_HABITS, todayKey(now)).then((s) => s && typeof s.streak === "number" && setStreak(s.streak));
+    STREAK_HABITS.forEach(({ key, habit }) => {
+      api.getStreak([habit], todayKey(now)).then((s) => s && typeof s.streak === "number" && setHabitStreaks((p) => ({ ...p, [key]: s.streak })));
+    });
   }, [now]);
   const doneHabits = NGAY_HABITS.filter((k) => habitMap[k]).length;
   const habitPct = (doneHabits / NGAY_HABITS.length) * 100;
@@ -38,6 +49,19 @@ export default function Home({ quote, nlpQuote, now, go, linkProps, compact }) {
     </div>
   );
 
+  const habitStreakChips = (
+    <div style={{ marginTop: 6, display: "flex", flexWrap: "wrap", gap: 6 }}>
+      {STREAK_HABITS.map(({ key, label }) => {
+        const n = habitStreaks[key] || 0;
+        return (
+          <div key={key} style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11.5, fontWeight: 700, color: n > 0 ? T.grainDeep : T.muted, background: n > 0 ? T.grainSoft : T.surfaceAlt, padding: "3px 9px", borderRadius: 999 }}>
+            <span>{label}: {n} ngày</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+
   const pulse = (clockSize) => (
     <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
       <AnalogClock size={clockSize} />
@@ -47,6 +71,7 @@ export default function Home({ quote, nlpQuote, now, go, linkProps, compact }) {
             <Eyebrow>Nhịp ngày hôm nay</Eyebrow>
             <div style={{ fontFamily: SERIF, fontSize: 19, fontWeight: 700, color: T.text, marginTop: 3 }}>{doneHabits}/{NGAY_HABITS.length} thói quen</div>
             {streakChip}
+            {habitStreakChips}
           </div>
           <SunRing pct={habitPct} size={52} />
         </div>
@@ -65,23 +90,22 @@ export default function Home({ quote, nlpQuote, now, go, linkProps, compact }) {
           <QuoteBar quote={nlpQuote} tone="nlp" center hideAuthor style={{ height: "100%" }} />
         </div>
 
-        {/* lịch (trái, hẹp hơn) · đồng hồ + thói quen + thao tác nhanh (phải) */}
-        <Card style={{ padding: 0, overflow: "hidden" }}>
-          <div style={{ display: "flex", alignItems: "stretch" }}>
-            <div style={{ flex: "0.9 1 0", minWidth: 280, padding: "16px 20px", borderRight: `1px solid ${T.line}` }}>
-              <MonthCalendar now={now} compact tasks={tasks} />
+        {/* đồng hồ + thói quen + thao tác nhanh gọn */}
+        <Card style={{ padding: "16px 20px", display: "flex", alignItems: "stretch", gap: 18, flexWrap: "wrap", background: `linear-gradient(150deg, ${T.surface}, ${T.surfaceAlt})` }}>
+          <div style={{ flex: "1.3 1 0", minWidth: 320 }}>{pulse(96)}</div>
+          <div style={{ flex: "1 1 0", minWidth: 240, borderLeft: `1px solid ${T.line}`, paddingLeft: 18, display: "grid", gap: 12, alignContent: "center" }}>
+            <div>
+              <Eyebrow style={{ marginBottom: 8 }}>Thao tác nhanh</Eyebrow>
+              <QuickActions onAddTask={addTask} projects={projects} compact />
             </div>
-            <div style={{ flex: "1.25 1 0", minWidth: 380, padding: "16px 20px", display: "grid", gap: 13, alignContent: "start", background: `linear-gradient(150deg, ${T.surface}, ${T.surfaceAlt})` }}>
-              {pulse(104)}
-              <div>
-                <Eyebrow style={{ marginBottom: 8 }}>Thao tác nhanh</Eyebrow>
-                <QuickActions onAddTask={addTask} projects={projects} />
-              </div>
+            <div>
+              <QuickLinks {...linkProps} bare compact />
             </div>
           </div>
         </Card>
 
-        <QuickLinks {...linkProps} />
+        {/* lịch nhiệm vụ */}
+        <TaskCalendar tasks={tasks} projects={projects} onAdd={addTask} onEdit={editTask} onToggle={toggleTask} />
 
         {board(true, 420)}
       </div>
@@ -98,14 +122,15 @@ export default function Home({ quote, nlpQuote, now, go, linkProps, compact }) {
 
       <Card>
         <Eyebrow style={{ marginBottom: 10 }}>Thao tác nhanh</Eyebrow>
-        <QuickActions onAddTask={addTask} projects={projects} />
+        <QuickActions onAddTask={addTask} projects={projects} compact />
+        <div style={{ marginTop: 12, paddingTop: 12, borderTop: `1px solid ${T.line}` }}>
+          <QuickLinks {...linkProps} bare compact />
+        </div>
       </Card>
 
-      <QuickLinks {...linkProps} />
+      <TaskCalendar tasks={tasks} projects={projects} onAdd={addTask} onEdit={editTask} onToggle={toggleTask} />
 
       {board(true, 360)}
-
-      <Card><MonthCalendar now={now} compact tasks={tasks} /></Card>
     </div>
   );
 }

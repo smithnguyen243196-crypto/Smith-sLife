@@ -10,8 +10,19 @@ const openLink = (url) => { if (url) window.open(url, "_blank", "noopener,norefe
 const domainOf = (url) => (url ? url.replace(/^https?:\/\//, "").replace(/\/.*$/, "") : "");
 
 // Thẻ liên kết — cùng dáng với thẻ công cụ
-function LinkCard({ item, retailer }) {
+function LinkCard({ item, retailer, compact }) {
   const url = resolveUrl(item, retailer);
+  if (compact) {
+    return (
+      <button onClick={() => openLink(url)} className="lift press" title={item.label}
+        style={{ display: "flex", alignItems: "center", gap: 7, textAlign: "left", background: T.surface, border: `1px solid ${T.line}`, borderRadius: R.ctrl, padding: "7px 8px", cursor: "pointer", fontFamily: FONT, boxShadow: T.shadowSm, minWidth: 0 }}>
+        <div style={{ width: 24, height: 24, borderRadius: 7, background: T.inkSoft, color: T.ink, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+          {item.iconName ? <Icon name={item.iconName} size={14} /> : <span style={{ fontSize: 13, lineHeight: 1 }}>{item.icon || "🔗"}</span>}
+        </div>
+        <div style={{ fontWeight: 700, fontSize: 11.5, color: T.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", minWidth: 0 }}>{item.label}</div>
+      </button>
+    );
+  }
   return (
     <button onClick={() => openLink(url)} className="lift press"
       style={{ position: "relative", textAlign: "left", background: T.surface, border: `1px solid ${T.line}`, borderRadius: R.card, padding: 15, cursor: "pointer", fontFamily: FONT, boxShadow: T.shadowSm, minWidth: 0 }}>
@@ -26,24 +37,27 @@ function LinkCard({ item, retailer }) {
 }
 
 // cfg = { retailer, items }; onChange(cfg) để lưu Upstash
-export default function QuickLinks({ cfg, onChange }) {
+// bare: bỏ khung Card ngoài để nhúng chung vào card khác (vd. cạnh Thao tác nhanh)
+export default function QuickLinks({ cfg, onChange, bare, compact }) {
   const [open, setOpen] = useState(false);
   const items = cfg?.items || [];
   const retailer = cfg?.retailer || "";
 
-  return (
-    <Card>
+  const body = (
+    <>
       <SectionTitle icon="external" right={<IconBtn icon="cog" onClick={() => setOpen(true)} title="Tuỳ chỉnh liên kết" color={T.ink} />}>Truy cập nhanh</SectionTitle>
       {items.length === 0 ? (
         <EmptyState>Chưa có liên kết. Bấm ⚙ để thêm.</EmptyState>
       ) : (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))", gap: 12 }}>
-          {items.map((it) => <LinkCard key={it.id} item={it} retailer={retailer} />)}
+        <div style={{ display: "grid", gridTemplateColumns: compact ? "repeat(auto-fit, minmax(120px, 1fr))" : "repeat(auto-fit, minmax(190px, 1fr))", gap: compact ? 8 : 12 }}>
+          {items.map((it) => <LinkCard key={it.id} item={it} retailer={retailer} compact={compact} />)}
         </div>
       )}
       <LinkEditor open={open} cfg={cfg} onClose={() => setOpen(false)} onChange={onChange} />
-    </Card>
+    </>
   );
+
+  return bare ? body : <Card>{body}</Card>;
 }
 
 // Nút mở KiotViet đơn lẻ (dùng trong Kiểm Két) — ưu tiên Báo Cáo Cuối Ngày
