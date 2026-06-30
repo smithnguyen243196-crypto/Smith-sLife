@@ -10,6 +10,28 @@ const pct = (a, total) => (total > 0 ? Math.round((a / total) * 1000) / 10 : 0);
 const shortDate = (s) => { const [, m, d] = s.split("-"); return `${d}/${m}`; };
 const addDays = (s, n) => { const d = new Date(s + "T00:00:00"); d.setDate(d.getDate() + n); return todayKey(d); };
 
+// Khớp tên thô đọc từ ảnh (vd "Minh Trí - 0919 502 562", "Đô") với danh sách SALES_STAFF.
+function matchStaff(raw) {
+  const r = (raw || "").normalize("NFC").trim().toLowerCase();
+  if (!r) return null;
+  let best = null;
+  for (const s of SALES_STAFF) {
+    const sl = s.toLowerCase();
+    if (sl === r) return s;
+    if (sl.includes(r) || r.includes(sl)) { best = best || s; continue; }
+    const last = sl.split(" ").pop();
+    if (r === last || r.includes(last)) best = best || s;
+  }
+  return best;
+}
+
+const fileToDataURL = (file) => new Promise((resolve, reject) => {
+  const fr = new FileReader();
+  fr.onload = () => resolve(fr.result);
+  fr.onerror = reject;
+  fr.readAsDataURL(file);
+});
+
 function NumberInput({ value, onChange, placeholder }) {
   return (
     <input inputMode="numeric" style={{ ...inputStyle, fontWeight: 800, fontSize: 16, textAlign: "right" }}
@@ -67,6 +89,8 @@ export default function DoanhSoTool({ quote }) {
   const [busy, setBusy] = useState(false);
   const [savedAt, setSavedAt] = useState(0);
   const [metric, setMetric] = useState("total");
+  const [imgBusy, setImgBusy] = useState(null); // "cc" | "ss" | null
+  const [imgMsg, setImgMsg] = useState("");
 
   useEffect(() => { api.getDoanhSo().then((r) => Array.isArray(r) && setRecords(r)); }, []);
 
@@ -103,6 +127,32 @@ export default function DoanhSoTool({ quote }) {
 
   const delRecord = (id) => { setRecords((p) => p.filter((x) => x.id !== id)); api.deleteDoanhSo(id); };
 
+  // Tải ảnh báo cáo (chụp màn hình) -> AI đọc SL theo từng người bán -> tự điền vào cột CC hoặc SS.
+  const handleImage = async (kind, file) => {
+    if (!file) return;
+    setImgBusy(kind); setImgMsg("");
+    try {
+      const dataUrl = await fileToDataURL(file);
+      const { sellers } = await api.parseSalesImage(dataUrl);
+      let matched = 0;
+      setForm((prev) => {
+        const next = { ...prev };
+        (sellers || []).forEach(({ name, sl }) => {
+          const staff = matchStaff(name);
+          if (!staff || sl == null) return;
+          matched++;
+          next[staff] = { ...next[staff], [kind]: String(sl) };
+        });
+        return next;
+      });
+      setImgMsg(matched ? `Đã điền ${matched}/${(sellers || []).length} nhân viên từ ảnh — kiểm tra lại rồi bấm Lưu.` : "Không khớp được tên nhân viên nào từ ảnh.");
+    } catch (e) {
+      setImgMsg("Lỗi đọc ảnh: " + (e.message || e));
+    } finally {
+      setImgBusy(null);
+    }
+  };
+
   const dayTotal = SALES_STAFF.reduce((s, st) => s + num(form[st]?.total), 0);
 
   // 14 ngày gần nhất có dữ liệu (hoặc 14 ngày gần đây tính từ hôm nay nếu chưa có gì)
@@ -126,11 +176,22 @@ export default function DoanhSoTool({ quote }) {
       {/* Nhập doanh số cuối ngày */}
       <Card>
         <SectionTitle icon="report" right={<SavedTag show={!!savedAt} />}>Nhập doanh số cuối ngày</SectionTitle>
-        <div style={{ marginBottom: 12, maxWidth: 220 }}>
-          <Field label="Ngày">
-            <input type="date" value={date} onChange={(e) => setDate(e.target.value)} style={inputStyle} />
-          </Field>
+        <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "flex-end", marginBottom: 12 }}>
+          <div style={{ maxWidth: 220 }}>
+            <Field label="Ngày">
+              <input type="date" value={date} onChange={(e) => setDate(e.target.value)} style={inputStyle} />
+            </Field>
+          </div>
+          <div style={{ display: "flex", gap: 8 }}>
+            {[["cc", "📷 Tải ảnh SP CC"], ["ss", "📷 Tải ảnh SP SS"]].map(([kind, label]) => (
+              <label key={kind} className="press" style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "10px 14px", borderRadius: R.ctrl, border: `1.5px solid ${T.line}`, background: T.surface, color: T.ink, cursor: "pointer", fontFamily: FONT, fontWeight: 700, fontSize: 13.5 }}>
+                {imgBusy === kind ? "Đang đọc ảnh..." : label}
+                <input type="file" accept="image/*" hidden disabled={!!imgBusy} onChange={(e) => { handleImage(kind, e.target.files[0]); e.target.value = ""; }} />
+              </label>
+            ))}
+          </div>
         </div>
+        {imgMsg && <div style={{ fontSize: 12.5, fontWeight: 700, color: imgMsg.startsWith("Lỗi") ? T.danger : T.success, marginBottom: 12 }}>{imgMsg}</div>}
 
         <div style={{ display: "grid", gap: 10 }}>
           <div style={{ display: "grid", gridTemplateColumns: "1.1fr 0.85fr 0.85fr 0.85fr 1fr", gap: 8, padding: "0 2px", fontSize: 11.5, fontWeight: 800, color: T.muted, textTransform: "uppercase", letterSpacing: ".04em" }}>

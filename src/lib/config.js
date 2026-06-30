@@ -48,8 +48,8 @@ export const NOTE_TAGS = ["Cửa hàng", "Đồng ruộng", "Khách hàng", "Ý 
 
 // ===== Doanh Số nhân viên (báo cáo cuối ngày) =====
 // Đổi tên nhân viên tại đây nếu cần.
-export const SALES_STAFF = ["Minh Trí", "Thành Đô", "Uyên"];
-export const SALES_STAFF_COLORS = { "Minh Trí": "#3E8E5A", "Thành Đô": "#C79A2C", "Uyên": "#B5432B" };
+export const SALES_STAFF = ["Minh Trí", "Thành Đô", "Uyên", "Như Ý"];
+export const SALES_STAFF_COLORS = { "Minh Trí": "#3E8E5A", "Thành Đô": "#C79A2C", "Uyên": "#B5432B", "Như Ý": "#7A4DA0" };
 
 // ===== Màu dự án (cho viền nhiệm vụ + chấm trên lịch) =====
 export const PROJECT_COLORS = ["#3E8E5A", "#C79A2C", "#B5432B", "#2E7D9B", "#7A4DA0", "#C2683A", "#4C7A2F", "#9B6A2E"];
