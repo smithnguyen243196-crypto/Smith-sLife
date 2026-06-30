@@ -33,9 +33,10 @@ const fileToDataURL = (file) => new Promise((resolve, reject) => {
 });
 
 function NumberInput({ value, onChange, placeholder }) {
+  const display = value ? Number(value).toLocaleString("vi-VN") : "";
   return (
     <input inputMode="numeric" style={{ ...inputStyle, fontWeight: 800, fontSize: 16, textAlign: "right" }}
-      placeholder={placeholder} value={value} onChange={(e) => onChange(e.target.value.replace(/\D/g, ""))} />
+      placeholder={placeholder} value={display} onChange={(e) => onChange(e.target.value.replace(/\D/g, ""))} />
   );
 }
 
