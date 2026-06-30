@@ -6,6 +6,7 @@ import { Card, SectionTitle, QuoteBar, Btn, IconBtn, Field, inputStyle, EmptySta
 import { Icon } from "../components/icons.jsx";
 
 const num = (v) => { const n = Number(v); return isNaN(n) ? 0 : n; };
+const pct = (a, total) => (total > 0 ? Math.round((a / total) * 1000) / 10 : 0);
 const shortDate = (s) => { const [, m, d] = s.split("-"); return `${d}/${m}`; };
 const addDays = (s, n) => { const d = new Date(s + "T00:00:00"); d.setDate(d.getDate() + n); return todayKey(d); };
 
@@ -73,7 +74,7 @@ export default function DoanhSoTool({ quote }) {
     const f = {};
     SALES_STAFF.forEach((s) => {
       const rec = records.find((r) => r.date === date && r.staff === s);
-      f[s] = { cc: rec ? String(rec.cc) : "", ss: rec ? String(rec.ss) : "" };
+      f[s] = { cc: rec ? String(rec.cc) : "", ss: rec ? String(rec.ss) : "", total: rec ? String(rec.total) : "" };
     });
     setForm(f);
   }, [date, records]);
@@ -83,8 +84,8 @@ export default function DoanhSoTool({ quote }) {
   const save = async () => {
     setBusy(true);
     const results = await Promise.all(SALES_STAFF.map((s) => {
-      const cc = num(form[s]?.cc), ss = num(form[s]?.ss);
-      return api.saveDoanhSo({ date, staff: s, cc, ss, total: cc + ss });
+      const cc = num(form[s]?.cc), ss = num(form[s]?.ss), total = num(form[s]?.total);
+      return api.saveDoanhSo({ date, staff: s, cc, ss, total });
     }));
     setRecords((prev) => {
       const next = [...prev];
@@ -102,7 +103,7 @@ export default function DoanhSoTool({ quote }) {
 
   const delRecord = (id) => { setRecords((p) => p.filter((x) => x.id !== id)); api.deleteDoanhSo(id); };
 
-  const dayTotal = SALES_STAFF.reduce((s, st) => s + num(form[st]?.cc) + num(form[st]?.ss), 0);
+  const dayTotal = SALES_STAFF.reduce((s, st) => s + num(form[st]?.total), 0);
 
   // 14 ngày gần nhất có dữ liệu (hoặc 14 ngày gần đây tính từ hôm nay nếu chưa có gì)
   const dates = useMemo(() => {
@@ -132,20 +133,21 @@ export default function DoanhSoTool({ quote }) {
         </div>
 
         <div style={{ display: "grid", gap: 10 }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr 1fr 1fr", gap: 8, padding: "0 2px", fontSize: 11.5, fontWeight: 800, color: T.muted, textTransform: "uppercase", letterSpacing: ".04em" }}>
-            <span>Nhân viên</span><span style={{ textAlign: "right" }}>SP CC</span><span style={{ textAlign: "right" }}>SP SS</span><span style={{ textAlign: "right" }}>Tổng SP</span>
+          <div style={{ display: "grid", gridTemplateColumns: "1.1fr 0.85fr 0.85fr 0.85fr 1fr", gap: 8, padding: "0 2px", fontSize: 11.5, fontWeight: 800, color: T.muted, textTransform: "uppercase", letterSpacing: ".04em" }}>
+            <span>Nhân viên</span><span style={{ textAlign: "right" }}>SP CC</span><span style={{ textAlign: "right" }}>SP SS</span><span style={{ textAlign: "right" }}>Tổng SP</span><span style={{ textAlign: "right" }}>% CC · % SS</span>
           </div>
           {SALES_STAFF.map((s) => {
-            const cc = num(form[s]?.cc), ss = num(form[s]?.ss);
+            const cc = num(form[s]?.cc), ss = num(form[s]?.ss), total = num(form[s]?.total);
             return (
-              <div key={s} style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr 1fr 1fr", gap: 8, alignItems: "center" }}>
+              <div key={s} style={{ display: "grid", gridTemplateColumns: "1.1fr 0.85fr 0.85fr 0.85fr 1fr", gap: 8, alignItems: "center" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 7, minWidth: 0 }}>
                   <span style={{ width: 10, height: 10, borderRadius: "50%", background: SALES_STAFF_COLORS[s], flexShrink: 0 }} />
                   <span style={{ fontWeight: 700, fontSize: 14, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s}</span>
                 </div>
                 <NumberInput value={form[s]?.cc || ""} onChange={(v) => setField(s, "cc", v)} placeholder="0" />
                 <NumberInput value={form[s]?.ss || ""} onChange={(v) => setField(s, "ss", v)} placeholder="0" />
-                <div style={{ textAlign: "right", fontWeight: 900, fontSize: 16, color: T.ink }}>{fmt(cc + ss)}</div>
+                <NumberInput value={form[s]?.total || ""} onChange={(v) => setField(s, "total", v)} placeholder="0" />
+                <div style={{ textAlign: "right", fontSize: 12.5, fontWeight: 700, color: T.muted, whiteSpace: "nowrap" }}>{pct(cc, total)}% · {pct(ss, total)}%</div>
               </div>
             );
           })}
@@ -202,7 +204,7 @@ export default function DoanhSoTool({ quote }) {
                     <div key={r.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 12px", background: T.surface }}>
                       <span style={{ width: 9, height: 9, borderRadius: "50%", background: SALES_STAFF_COLORS[r.staff], flexShrink: 0 }} />
                       <span style={{ flex: 1, minWidth: 0, fontWeight: 700, fontSize: 13.5, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.staff}</span>
-                      <span style={{ fontSize: 12.5, color: T.muted, fontWeight: 600 }}>CC {fmt(r.cc)} · SS {fmt(r.ss)}</span>
+                      <span style={{ fontSize: 12.5, color: T.muted, fontWeight: 600 }}>CC {fmt(r.cc)} ({pct(r.cc, r.total)}%) · SS {fmt(r.ss)} ({pct(r.ss, r.total)}%)</span>
                       <span style={{ fontWeight: 900, fontSize: 14, color: T.ink, minWidth: 44, textAlign: "right" }}>{fmt(r.total)}</span>
                       <IconBtn icon="trash" onClick={() => delRecord(r.id)} title="Xoá" color={T.danger} size={15} />
                     </div>
