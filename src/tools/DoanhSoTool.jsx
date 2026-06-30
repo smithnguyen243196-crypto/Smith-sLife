@@ -82,6 +82,51 @@ function SalesChart({ records, dates, metric }) {
   );
 }
 
+// Biểu đồ tròn: tổng theo từng nhân viên trong khoảng `dates`, chia % trên tổng 4 người.
+function SalesPie({ records, dates, metric }) {
+  const totals = SALES_STAFF.map((s) => ({
+    staff: s,
+    value: dates.reduce((sum, d) => { const r = records.find((x) => x.date === d && x.staff === s); return sum + (r ? num(r[metric]) : 0); }, 0),
+  }));
+  const grand = totals.reduce((s, t) => s + t.value, 0);
+
+  const size = 200, cx = size / 2, cy = size / 2, r = 88;
+  let angle = -Math.PI / 2;
+  const arcs = grand > 0 ? totals.filter((t) => t.value > 0).map((t) => {
+    const frac = t.value / grand;
+    const start = angle;
+    const end = angle + frac * Math.PI * 2;
+    angle = end;
+    const large = end - start > Math.PI ? 1 : 0;
+    const x1 = cx + r * Math.cos(start), y1 = cy + r * Math.sin(start);
+    const x2 = cx + r * Math.cos(end), y2 = cy + r * Math.sin(end);
+    return { staff: t.staff, value: t.value, frac, path: `M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2} Z` };
+  }) : [];
+
+  return (
+    <div style={{ display: "flex", gap: 20, flexWrap: "wrap", alignItems: "center", justifyContent: "center" }}>
+      <svg viewBox={`0 0 ${size} ${size}`} width={220} height={220} style={{ flexShrink: 0 }}>
+        {grand > 0 ? arcs.map((a) => (
+          <path key={a.staff} d={a.path} fill={SALES_STAFF_COLORS[a.staff] || T.ink} stroke={T.surface} strokeWidth="2" opacity="0.92" />
+        )) : <circle cx={cx} cy={cy} r={r} fill={T.surfaceSink} />}
+        <circle cx={cx} cy={cy} r={r * 0.55} fill={T.surface} />
+        <text x={cx} y={cy - 3} textAnchor="middle" fontSize="13" fontWeight="900" fill={T.ink}>{fmt(grand)}</text>
+        <text x={cx} y={cy + 13} textAnchor="middle" fontSize="9.5" fontWeight="700" fill={T.muted}>tổng</text>
+      </svg>
+      <div style={{ display: "grid", gap: 8 }}>
+        {totals.map((t) => (
+          <div key={t.staff} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13 }}>
+            <span style={{ width: 11, height: 11, borderRadius: "50%", background: SALES_STAFF_COLORS[t.staff], flexShrink: 0 }} />
+            <span style={{ fontWeight: 700, color: T.text, minWidth: 78 }}>{t.staff}</span>
+            <span style={{ fontWeight: 900, color: T.ink }}>{pct(t.value, grand)}%</span>
+            <span style={{ color: T.muted, fontSize: 12 }}>({fmt(t.value)})</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function DoanhSoTool({ quote }) {
   const [records, setRecords] = useState([]);
   const [date, setDate] = useState(todayKey());
@@ -243,6 +288,16 @@ export default function DoanhSoTool({ quote }) {
               ))}
             </div>
           </>
+        )}
+      </Card>
+
+      {/* Tỷ lệ đóng góp */}
+      <Card>
+        <SectionTitle icon="report">Tỷ lệ đóng góp ({METRICS.find(([m]) => m === metric)?.[1]})</SectionTitle>
+        {records.length === 0 ? (
+          <EmptyState>Chưa có dữ liệu — nhập doanh số ở trên để xem tỷ lệ.</EmptyState>
+        ) : (
+          <SalesPie records={records} dates={dates} metric={metric} />
         )}
       </Card>
 
