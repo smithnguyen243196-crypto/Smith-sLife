@@ -38,4 +38,9 @@ export const api = {
   // Truy cập nhanh (KiotViet + liên kết) — Upstash
   getLinks: () => j("/api/links").catch(() => null),
   saveLinks: (cfg) => j("/api/links", { method: "POST", body: JSON.stringify(cfg) }).catch(() => null),
+
+  // Doanh Số nhân viên (Upstash) — record = { date, staff, cc, ss, total }
+  getDoanhSo: () => j("/api/doanhso").catch(() => []),
+  saveDoanhSo: (rec) => j("/api/doanhso", { method: "POST", body: JSON.stringify(rec) }).catch(() => null),
+  deleteDoanhSo: (id) => j(`/api/doanhso?id=${id}`, { method: "DELETE" }).catch(() => null),
 };

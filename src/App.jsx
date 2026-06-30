@@ -11,6 +11,7 @@ import KiemKetTool from "./tools/KiemKetTool.jsx";
 import TinhLaiTool from "./tools/TinhLaiTool.jsx";
 import ViTool from "./tools/ViTool.jsx";
 import NotesTool from "./tools/NotesTool.jsx";
+import DoanhSoTool from "./tools/DoanhSoTool.jsx";
 
 const FALLBACK = [
   { text: "Những khách hàng bất mãn nhất là nguồn học hỏi lớn nhất của bạn.", author: "Bill Gates" },
@@ -23,6 +24,7 @@ const NAV = [
   { id: "home", icon: "home", label: "Trang chủ" },
   { id: "tasks", icon: "tasks", label: "Nhiệm Vụ" },
   { id: "kiemket", icon: "kiemket", label: "Kiểm Két" },
+  { id: "doanhso", icon: "report", label: "Doanh Số" },
   { id: "tinhlai", icon: "tinhlai", label: "Tính Lãi" },
   { id: "vi", icon: "vi", label: "Ví" },
   { id: "notes", icon: "notes", label: "Ghi Chú" },
@@ -67,6 +69,7 @@ export default function App() {
       {view === "home" && <Home quote={quote} nlpQuote={nlpQuote} now={now} go={go} linkProps={linkProps} compact={isDesktop} />}
       {view === "tasks" && <TasksTool quote={quote} now={now} />}
       {view === "kiemket" && <KiemKetTool quote={quote} now={now} linkCfg={links} wide={isDesktop} />}
+      {view === "doanhso" && <DoanhSoTool quote={quote} />}
       {view === "tinhlai" && <TinhLaiTool quote={quote} now={now} />}
       {view === "vi" && <ViTool quote={quote} />}
       {view === "notes" && <NotesTool quote={quote} />}
