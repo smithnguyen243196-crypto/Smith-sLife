@@ -12,8 +12,23 @@ const BRAND_SUFFIXES = ["CC", "SS"];
 
 const todayHoChiMinh = () => new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Ho_Chi_Minh" }); // YYYY-MM-DD
 
+// KiotViet có request nền chạy liên tục (thông báo, polling...) nên "networkidle" không bao giờ đạt được
+// -> luôn dùng "domcontentloaded" cho goto rồi chờ đúng phần tử cần thiết xuất hiện.
+async function waitReportLoaded(page, timeout = 20000) {
+  await Promise.race([
+    page.locator('[class*="txtUserName"]').first().waitFor({ timeout }),
+    page.getByText("Báo cáo không có dữ liệu").waitFor({ timeout }),
+  ]).catch(() => {});
+  await page.waitForTimeout(400);
+}
+
 async function login(page, retailer) {
-  await page.goto(`https://${retailer}.kiotviet.vn/man/`, { waitUntil: "networkidle" });
+  await page.goto(`https://${retailer}.kiotviet.vn/man/`, { waitUntil: "domcontentloaded" });
+  await Promise.race([
+    page.locator("#Password").waitFor({ timeout: 20000 }),
+    page.locator("kv-report-type").waitFor({ timeout: 20000 }),
+  ]).catch(() => {});
+
   const hasLoginForm = await page.locator("#Password").count();
   if (!hasLoginForm) return; // đã có session sẵn (không nên xảy ra trên máy chủ, nhưng cứ kiểm tra)
 
@@ -22,7 +37,7 @@ async function login(page, retailer) {
   await page.locator("#Password").fill(PASSWORD());
   await page.locator('button[type="submit"]').filter({ hasText: "Quản lý" }).click();
   await page.locator("#Password").waitFor({ state: "detached", timeout: 20000 }).catch(() => {});
-  await page.waitForLoadState("networkidle");
+  await page.waitForTimeout(1500);
 
   if (await page.locator("#Password").count()) {
     throw new Error("Đăng nhập KiotViet thất bại — kiểm tra lại KIOTVIET_USERNAME/KIOTVIET_PASSWORD");
@@ -30,7 +45,8 @@ async function login(page, retailer) {
 }
 
 async function openUserReport(page, retailer) {
-  await page.goto(`https://${retailer}.kiotviet.vn/man/#/UserReport`, { waitUntil: "networkidle" });
+  await page.goto(`https://${retailer}.kiotviet.vn/man/#/UserReport`, { waitUntil: "domcontentloaded" });
+  await page.getByText("Mối quan tâm", { exact: true }).waitFor({ timeout: 20000 });
   // Mối quan tâm -> "Hàng bán theo nhân viên"
   await page.locator('kv-report-type').getByText("Bán hàng", { exact: true }).click();
   await page.getByText("Hàng bán theo nhân viên", { exact: true }).click();
@@ -38,7 +54,7 @@ async function openUserReport(page, retailer) {
   await page.getByText("Tùy chỉnh", { exact: true }).first().click();
   await page.getByText("Hôm nay", { exact: true }).click();
   await page.getByText("Tạo báo cáo", { exact: true }).click();
-  await page.waitForLoadState("networkidle");
+  await waitReportLoaded(page);
 }
 
 async function clearBrandFilter(page) {
@@ -73,8 +89,7 @@ async function selectBrandSuffix(page, suffix) {
     if (!clickedAny) break;
   }
   await page.keyboard.press("Escape");
-  await page.waitForLoadState("networkidle");
-  await page.waitForTimeout(800);
+  await waitReportLoaded(page);
   return clicked.size;
 }
 
