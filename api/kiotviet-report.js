@@ -74,14 +74,6 @@ async function openUserReport(page, retailer) {
   await waitReportLoaded(page);
 }
 
-async function clearBrandFilter(page) {
-  const closeBtn = page.locator("#tradeMarkFilter_taglist .k-i-close");
-  while (await closeBtn.count()) {
-    await closeBtn.first().click();
-    await page.waitForTimeout(150);
-  }
-}
-
 async function selectBrandSuffix(page, suffix) {
   await dismissOverlay(page);
   const wrapper = page.locator(".k-multiselect:has(#tradeMarkFilter_taglist)");
@@ -119,6 +111,24 @@ async function readSellerRows(page) {
   });
 }
 
+// Chặn ảnh/font/media để trang KiotViet (nặng icon, ảnh sản phẩm) load nhanh hơn — không ảnh hưởng
+// vì ta chỉ đọc số liệu từ text trong DOM, không cần hiển thị đầy đủ.
+const blockHeavyAssets = (page) => page.route(/\.(png|jpe?g|gif|svg|webp|woff2?|ttf|eot)(\?|$)/i, (route) => route.abort());
+
+// Mỗi thương hiệu (CC/SS) chạy trên 1 tab riêng (cùng context nên dùng chung cookie đăng nhập) để
+// 2 lượt lọc + chờ báo cáo (phần tốn thời gian nhất) chạy song song thay vì tuần tự -> giảm ~1 nửa thời gian.
+async function fetchBrandSuffix(context, retailer, suffix) {
+  const page = await context.newPage();
+  try {
+    await blockHeavyAssets(page);
+    await openUserReport(page, retailer);
+    const matched = await selectBrandSuffix(page, suffix);
+    return matched > 0 ? await readSellerRows(page) : [];
+  } finally {
+    await page.close();
+  }
+}
+
 export default async function handler(req, res) {
   if (req.method !== "POST") return json(res, 405, { error: "method" });
   if (!USERNAME() || !PASSWORD()) return json(res, 500, { error: "Chưa cấu hình KIOTVIET_USERNAME/KIOTVIET_PASSWORD trên server" });
@@ -136,24 +146,17 @@ export default async function handler(req, res) {
       executablePath: await chromium.executablePath(),
       headless: true,
     });
-    const page = await browser.newPage();
-    // Chặn ảnh/font/media để trang KiotViet (nặng icon, ảnh sản phẩm) load nhanh hơn — không ảnh hưởng
-    // vì ta chỉ đọc số liệu từ text trong DOM, không cần hiển thị đầy đủ.
-    await page.route(/\.(png|jpe?g|gif|svg|webp|woff2?|ttf|eot)(\?|$)/i, (route) => route.abort());
+    const context = await browser.newContext();
     const retailer = RETAILER();
 
-    await login(page, retailer);
-    await openUserReport(page, retailer);
+    const loginPage = await context.newPage();
+    await blockHeavyAssets(loginPage);
+    await login(loginPage, retailer);
+    await loginPage.close();
 
-    const result = {};
-    for (const suffix of BRAND_SUFFIXES) {
-      const key = suffix.toLowerCase();
-      const matched = await selectBrandSuffix(page, suffix);
-      result[key] = matched > 0 ? await readSellerRows(page) : [];
-      await clearBrandFilter(page);
-    }
+    const [cc, ss] = await Promise.all(BRAND_SUFFIXES.map((suffix) => fetchBrandSuffix(context, retailer, suffix)));
 
-    return json(res, 200, { date: targetDate, cc: result.cc, ss: result.ss });
+    return json(res, 200, { date: targetDate, cc, ss });
   } catch (e) {
     return json(res, 500, { error: String(e.message || e) });
   } finally {
