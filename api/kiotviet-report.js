@@ -11,7 +11,7 @@ const PASSWORD = () => process.env.KIOTVIET_PASSWORD;
 const BRAND_SUFFIXES = ["CC", "SS"];
 // Đánh dấu phiên bản để khi báo lỗi có thể biết chắc server đang chạy đúng bản mới hay vẫn là bản cũ
 // (tránh mất công đoán do deploy nhầm/cache) — đổi chuỗi này mỗi khi sửa file.
-const BUILD_TAG = "kv-2026-07-02-sequential";
+const BUILD_TAG = "kv-2026-07-02-timing-logs";
 
 const todayHoChiMinh = () => new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Ho_Chi_Minh" }); // YYYY-MM-DD
 
@@ -51,12 +51,14 @@ async function clickSafe(locator, page) {
   }
 }
 
-async function login(page, retailer) {
+async function login(page, retailer, mark) {
   await page.goto(`https://${retailer}.kiotviet.vn/man/`, { waitUntil: "domcontentloaded" });
+  mark("login: goto xong");
   await Promise.race([
     page.locator("#Password").waitFor({ timeout: 20000 }),
     page.locator("kv-report-type").waitFor({ timeout: 20000 }),
   ]).catch(() => {});
+  mark("login: đã thấy form login hoặc đã có session");
 
   const hasLoginForm = await page.locator("#Password").count();
   if (!hasLoginForm) return; // đã có session sẵn (không nên xảy ra trên máy chủ, nhưng cứ kiểm tra)
@@ -65,36 +67,44 @@ async function login(page, retailer) {
   await page.locator("#UserName").fill(USERNAME());
   await page.locator("#Password").fill(PASSWORD());
   await page.locator('button[type="submit"]').filter({ hasText: "Quản lý" }).click();
+  mark("login: đã bấm Quản lý");
   await page.locator("#Password").waitFor({ state: "detached", timeout: 20000 }).catch(() => {});
   await page.waitForTimeout(800);
+  mark("login: xong");
 
   if (await page.locator("#Password").count()) {
     throw new Error("Đăng nhập KiotViet thất bại — kiểm tra lại KIOTVIET_USERNAME/KIOTVIET_PASSWORD");
   }
 }
 
-async function openUserReport(page, retailer) {
+async function openUserReport(page, retailer, mark) {
   await page.goto(`https://${retailer}.kiotviet.vn/man/#/UserReport`, { waitUntil: "domcontentloaded" });
+  mark("openUserReport: goto xong");
   await Promise.race([
     page.getByText("Mối quan tâm", { exact: true }).first().waitFor({ timeout: 25000 }),
     page.locator("#Password").waitFor({ timeout: 25000 }),
   ]).catch(() => {});
+  mark("openUserReport: đã thấy 'Mối quan tâm' hoặc timeout");
   if (await page.locator("#Password").count()) {
     throw new Error("Phiên đăng nhập bị mất khi mở báo cáo (rơi về lại trang login)");
   }
   await dismissOverlay(page);
+  mark("openUserReport: đã dò overlay");
 
   // Mối quan tâm -> "Hàng bán theo nhân viên".
   // Kendo dropdown giữ song song 1 <option> ẩn trùng chữ với span hiển thị -> không dùng getByText trên cả widget,
   // phải nhắm đúng span.k-input (để mở) rồi li.k-item trong danh sách xổ xuống (để chọn).
   await clickSafe(page.locator("kv-report-type span.k-input").first(), page);
   await clickSafe(page.locator("li.k-item").filter({ hasText: "Hàng bán theo nhân viên" }).first(), page);
+  mark("openUserReport: đã chọn Hàng bán theo nhân viên");
 
   // Thời gian -> Tuỳ chỉnh -> Hôm nay -> Tạo báo cáo
   await clickSafe(page.getByText("Tùy chỉnh", { exact: true }).first(), page);
   await clickSafe(page.getByText("Hôm nay", { exact: true }).first(), page);
   await clickSafe(page.getByText("Tạo báo cáo", { exact: true }).first(), page);
+  mark("openUserReport: đã bấm Tạo báo cáo");
   await waitReportLoaded(page);
+  mark("openUserReport: report đã load xong");
 }
 
 async function clearBrandFilter(page) {
@@ -156,30 +166,41 @@ export default async function handler(req, res) {
     return json(res, 400, { error: "Hiện chỉ hỗ trợ lấy báo cáo của hôm nay" });
   }
 
+  // Log mốc thời gian ra Vercel Runtime Logs — vẫn ghi lại được kể cả khi function bị kill do timeout,
+  // giúp biết chính xác bước nào chậm thay vì đoán.
+  const t0 = Date.now();
+  const mark = (label) => console.log(`[${BUILD_TAG}] ${label} @ ${Date.now() - t0}ms`);
+
   let browser;
   try {
+    mark("bắt đầu launch chromium");
     browser = await playwright.launch({
       args: chromium.args,
       executablePath: await chromium.executablePath(),
       headless: true,
     });
+    mark("chromium đã launch");
     const page = await browser.newPage();
     await blockHeavyAssets(page);
     const retailer = RETAILER();
 
-    await login(page, retailer);
-    await openUserReport(page, retailer);
+    await login(page, retailer, mark);
+    await openUserReport(page, retailer, mark);
 
     const result = {};
     for (const suffix of BRAND_SUFFIXES) {
       const key = suffix.toLowerCase();
       const matched = await selectBrandSuffix(page, suffix);
+      mark(`đã lọc xong thương hiệu ${suffix}, khớp ${matched} mục`);
       result[key] = matched > 0 ? await readSellerRows(page) : [];
       await clearBrandFilter(page);
+      mark(`đã xoá filter ${suffix}`);
     }
 
+    mark("hoàn tất, trả kết quả");
     return json(res, 200, { date: targetDate, cc: result.cc, ss: result.ss });
   } catch (e) {
+    mark(`lỗi: ${e.message || e}`);
     return json(res, 500, { error: `[${BUILD_TAG}] ${String(e.message || e)}` });
   } finally {
     if (browser) await browser.close();
