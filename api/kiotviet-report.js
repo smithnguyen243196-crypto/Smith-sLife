@@ -9,6 +9,9 @@ const RETAILER = () => process.env.KIOTVIET_RETAILER || "huyenthoco";
 const USERNAME = () => process.env.KIOTVIET_USERNAME;
 const PASSWORD = () => process.env.KIOTVIET_PASSWORD;
 const BRAND_SUFFIXES = ["CC", "SS"];
+// Đánh dấu phiên bản để khi báo lỗi có thể biết chắc server đang chạy đúng bản mới hay vẫn là bản cũ
+// (tránh mất công đoán do deploy nhầm/cache) — đổi chuỗi này mỗi khi sửa file.
+const BUILD_TAG = "kv-2026-07-02-overlay-retry";
 
 const todayHoChiMinh = () => new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Ho_Chi_Minh" }); // YYYY-MM-DD
 
@@ -172,7 +175,7 @@ export default async function handler(req, res) {
 
     return json(res, 200, { date: targetDate, cc, ss });
   } catch (e) {
-    return json(res, 500, { error: String(e.message || e) });
+    return json(res, 500, { error: `[${BUILD_TAG}] ${String(e.message || e)}` });
   } finally {
     if (browser) await browser.close();
   }
