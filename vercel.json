@@ -2,6 +2,6 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "rewrites": [{ "source": "/((?!api/).*)", "destination": "/index.html" }],
   "functions": {
-    "api/kiotviet-report.js": { "maxDuration": 60, "memory": 3009 }
+    "api/kiotviet-report.js": { "maxDuration": 60, "memory": 2048 }
   }
 }
