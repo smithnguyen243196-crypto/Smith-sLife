@@ -14,17 +14,17 @@ const todayHoChiMinh = () => new Date().toLocaleDateString("en-CA", { timeZone: 
 
 async function login(page, retailer) {
   await page.goto(`https://${retailer}.kiotviet.vn/man/`, { waitUntil: "networkidle" });
-  const hasPasswordField = await page.locator('input[type="password"]').count();
-  if (!hasPasswordField) return; // đã có session sẵn (không nên xảy ra trên máy chủ, nhưng cứ kiểm tra)
+  const hasLoginForm = await page.locator("#Password").count();
+  if (!hasLoginForm) return; // đã có session sẵn (không nên xảy ra trên máy chủ, nhưng cứ kiểm tra)
 
-  const userField = page.locator('input[name="Username"], input#Username, input[type="text"]:visible, input[type="email"]:visible').first();
-  await userField.fill(USERNAME());
-  await page.locator('input[type="password"]').first().fill(PASSWORD());
-  await Promise.all([
-    page.waitForNavigation({ waitUntil: "networkidle" }).catch(() => {}),
-    page.locator('button[type="submit"], button:has-text("Đăng nhập")').first().click(),
-  ]);
-  if (await page.locator('input[type="password"]').count()) {
+  // Trang login KiotViet có 1 input[type=password] ẩn (bẫy autofill) đứng trước ô thật -> phải chọn theo #id.
+  await page.locator("#UserName").fill(USERNAME());
+  await page.locator("#Password").fill(PASSWORD());
+  await page.locator('button[type="submit"]').filter({ hasText: "Quản lý" }).click();
+  await page.locator("#Password").waitFor({ state: "detached", timeout: 20000 }).catch(() => {});
+  await page.waitForLoadState("networkidle");
+
+  if (await page.locator("#Password").count()) {
     throw new Error("Đăng nhập KiotViet thất bại — kiểm tra lại KIOTVIET_USERNAME/KIOTVIET_PASSWORD");
   }
 }
