@@ -22,6 +22,18 @@ async function waitReportLoaded(page, timeout = 20000) {
   await page.waitForTimeout(400);
 }
 
+// Phiên headless hoàn toàn mới (chưa từng "đã xem") có thể hiện banner/dialog khuyến mại chặn click
+// (vd "Bạn đã đăng ký chương trình khuyến mại ..."). Đóng mọi overlay kiểu Kendo trước khi thao tác tiếp.
+async function dismissOverlay(page) {
+  for (let i = 0; i < 3; i++) {
+    const overlay = page.locator(".k-overlay").first();
+    if (!(await overlay.count())) return;
+    await page.keyboard.press("Escape").catch(() => {});
+    await overlay.click({ force: true, timeout: 2000 }).catch(() => {});
+    await page.waitForTimeout(400);
+  }
+}
+
 async function login(page, retailer) {
   await page.goto(`https://${retailer}.kiotviet.vn/man/`, { waitUntil: "domcontentloaded" });
   await Promise.race([
@@ -47,6 +59,7 @@ async function login(page, retailer) {
 async function openUserReport(page, retailer) {
   await page.goto(`https://${retailer}.kiotviet.vn/man/#/UserReport`, { waitUntil: "domcontentloaded" });
   await page.getByText("Mối quan tâm", { exact: true }).first().waitFor({ timeout: 20000 });
+  await dismissOverlay(page);
 
   // Mối quan tâm -> "Hàng bán theo nhân viên".
   // Kendo dropdown giữ song song 1 <option> ẩn trùng chữ với span hiển thị -> không dùng getByText trên cả widget,
@@ -70,6 +83,7 @@ async function clearBrandFilter(page) {
 }
 
 async function selectBrandSuffix(page, suffix) {
+  await dismissOverlay(page);
   const wrapper = page.locator(".k-multiselect:has(#tradeMarkFilter_taglist)");
   const input = wrapper.locator("input.k-input");
   await input.click();
