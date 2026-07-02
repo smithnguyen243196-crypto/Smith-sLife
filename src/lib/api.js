@@ -48,7 +48,9 @@ export const api = {
   // Không bắt lỗi ở đây để UI có thể hiện thông báo lỗi cụ thể (vd chưa cấu hình tài khoản).
   fetchKiotvietDoanhSo: async (date) => {
     const r = await fetch("/api/kiotviet-report", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ date }) });
-    const d = await r.json();
+    const text = await r.text();
+    let d;
+    try { d = JSON.parse(text); } catch { throw new Error(`Server lỗi (${r.status}) — có thể do chạy quá lâu hoặc hết bộ nhớ, thử lại sau ít phút`); }
     if (!r.ok) throw new Error(d.error || `kiotviet-report -> ${r.status}`);
     return d;
   },

@@ -19,7 +19,7 @@ async function waitReportLoaded(page, timeout = 20000) {
     page.locator('[class*="txtUserName"]').first().waitFor({ timeout }),
     page.getByText("Báo cáo không có dữ liệu").waitFor({ timeout }),
   ]).catch(() => {});
-  await page.waitForTimeout(400);
+  await page.waitForTimeout(250);
 }
 
 // Phiên headless hoàn toàn mới (chưa từng "đã xem") có thể hiện banner/dialog khuyến mại chặn click
@@ -49,7 +49,7 @@ async function login(page, retailer) {
   await page.locator("#Password").fill(PASSWORD());
   await page.locator('button[type="submit"]').filter({ hasText: "Quản lý" }).click();
   await page.locator("#Password").waitFor({ state: "detached", timeout: 20000 }).catch(() => {});
-  await page.waitForTimeout(1500);
+  await page.waitForTimeout(800);
 
   if (await page.locator("#Password").count()) {
     throw new Error("Đăng nhập KiotViet thất bại — kiểm tra lại KIOTVIET_USERNAME/KIOTVIET_PASSWORD");
@@ -88,7 +88,7 @@ async function selectBrandSuffix(page, suffix) {
   const input = wrapper.locator("input.k-input");
   await input.click();
   await input.fill(`- ${suffix}`);
-  await page.waitForTimeout(600); // Kendo lọc danh sách
+  await page.waitForTimeout(400); // Kendo lọc danh sách
 
   const clicked = new Set();
   for (let round = 0; round < 20; round++) {
@@ -137,6 +137,9 @@ export default async function handler(req, res) {
       headless: true,
     });
     const page = await browser.newPage();
+    // Chặn ảnh/font/media để trang KiotViet (nặng icon, ảnh sản phẩm) load nhanh hơn — không ảnh hưởng
+    // vì ta chỉ đọc số liệu từ text trong DOM, không cần hiển thị đầy đủ.
+    await page.route(/\.(png|jpe?g|gif|svg|webp|woff2?|ttf|eot)(\?|$)/i, (route) => route.abort());
     const retailer = RETAILER();
 
     await login(page, retailer);
