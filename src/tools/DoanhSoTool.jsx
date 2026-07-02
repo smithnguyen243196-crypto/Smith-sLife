@@ -166,26 +166,23 @@ export default function DoanhSoTool({ quote }) {
 
   const delRecord = (id) => { setRecords((p) => p.filter((x) => x.id !== id)); api.deleteDoanhSo(id); };
 
-  // Tự đăng nhập KiotViet, đọc báo cáo "Hàng bán theo nhân viên" hôm nay -> tự điền cột SP CC và SP SS.
+  // Tự đăng nhập KiotViet, đọc báo cáo "Hàng bán theo nhân viên" hôm nay -> tự điền cột Tổng SP.
   const handleKiotviet = async () => {
     setKvBusy(true); setKvMsg("");
     try {
-      const { cc, ss } = await api.fetchKiotvietDoanhSo(date);
-      let matched = 0, total = 0;
+      const { total: sellers } = await api.fetchKiotvietDoanhSo(date);
+      let matched = 0;
       setForm((prev) => {
         const next = { ...prev };
-        [["cc", cc], ["ss", ss]].forEach(([kind, sellers]) => {
-          (sellers || []).forEach(({ name, sl }) => {
-            total++;
-            const staff = matchStaff(name);
-            if (!staff || sl == null) return;
-            matched++;
-            next[staff] = { ...next[staff], [kind]: String(sl) };
-          });
+        (sellers || []).forEach(({ name, sl }) => {
+          const staff = matchStaff(name);
+          if (!staff || sl == null) return;
+          matched++;
+          next[staff] = { ...next[staff], total: String(sl) };
         });
         return next;
       });
-      setKvMsg(matched ? `Đã điền ${matched}/${total} dòng từ KiotViet — kiểm tra lại rồi bấm Lưu.` : "Không có dữ liệu khớp từ KiotViet hôm nay.");
+      setKvMsg(matched ? `Đã điền ${matched}/${(sellers || []).length} dòng từ KiotViet — kiểm tra lại rồi bấm Lưu.` : "Không có dữ liệu khớp từ KiotViet hôm nay.");
     } catch (e) {
       setKvMsg("Lỗi lấy dữ liệu KiotViet: " + (e.message || e));
     } finally {

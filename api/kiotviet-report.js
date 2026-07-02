@@ -1,5 +1,5 @@
 // Tự đăng nhập KiotViet (Playwright headless), mở báo cáo "Hàng bán theo nhân viên" cho hôm nay,
-// lọc theo Thương hiệu kết thúc bằng "- CC" / "- SS", đọc SL bán trực tiếp từ DOM báo cáo (không cần OCR ảnh).
+// đọc tổng SL bán trực tiếp từ DOM báo cáo (không cần OCR ảnh, không lọc theo thương hiệu).
 // Env bắt buộc: KIOTVIET_USERNAME, KIOTVIET_PASSWORD. Tuỳ chọn: KIOTVIET_RETAILER (mặc định "huyenthoco").
 import chromium from "@sparticuz/chromium";
 import { chromium as playwright } from "playwright-core";
@@ -8,10 +8,9 @@ import { json, readBody } from "./_notion.js";
 const RETAILER = () => process.env.KIOTVIET_RETAILER || "huyenthoco";
 const USERNAME = () => process.env.KIOTVIET_USERNAME;
 const PASSWORD = () => process.env.KIOTVIET_PASSWORD;
-const BRAND_SUFFIXES = ["CC", "SS"];
 // Đánh dấu phiên bản để khi báo lỗi có thể biết chắc server đang chạy đúng bản mới hay vẫn là bản cũ
 // (tránh mất công đoán do deploy nhầm/cache) — đổi chuỗi này mỗi khi sửa file.
-const BUILD_TAG = "kv-2026-07-02-timing-logs";
+const BUILD_TAG = "kv-2026-07-02-total-only";
 
 const todayHoChiMinh = () => new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Ho_Chi_Minh" }); // YYYY-MM-DD
 
@@ -107,43 +106,6 @@ async function openUserReport(page, retailer, mark) {
   mark("openUserReport: report đã load xong");
 }
 
-async function clearBrandFilter(page) {
-  const closeBtn = page.locator("#tradeMarkFilter_taglist .k-i-close");
-  while (await closeBtn.count()) {
-    await closeBtn.first().click();
-    await page.waitForTimeout(150);
-  }
-}
-
-async function selectBrandSuffix(page, suffix) {
-  await dismissOverlay(page, 800); // overlay khuyến mại thường đã bị đóng ở openUserReport, chỉ kiểm tra nhanh
-  const wrapper = page.locator(".k-multiselect:has(#tradeMarkFilter_taglist)");
-  const input = wrapper.locator("input.k-input");
-  await clickSafe(input, page);
-  await input.fill(`- ${suffix}`);
-  await page.waitForTimeout(400); // Kendo lọc danh sách
-
-  const clicked = new Set();
-  for (let round = 0; round < 20; round++) {
-    const items = page.locator("#tradeMarkFilter_listbox li");
-    const count = await items.count();
-    let clickedAny = false;
-    for (let i = 0; i < count; i++) {
-      const item = items.nth(i);
-      const text = (await item.textContent())?.trim();
-      if (!text || clicked.has(text)) continue;
-      await item.click();
-      clicked.add(text);
-      clickedAny = true;
-      await page.waitForTimeout(100);
-    }
-    if (!clickedAny) break;
-  }
-  await page.keyboard.press("Escape");
-  await waitReportLoaded(page);
-  return clicked.size;
-}
-
 async function readSellerRows(page) {
   return page.evaluate(() => {
     const names = Array.from(document.querySelectorAll('[class*="txtUserName"]')).map((e) => e.textContent.trim());
@@ -187,18 +149,10 @@ export default async function handler(req, res) {
     await login(page, retailer, mark);
     await openUserReport(page, retailer, mark);
 
-    const result = {};
-    for (const suffix of BRAND_SUFFIXES) {
-      const key = suffix.toLowerCase();
-      const matched = await selectBrandSuffix(page, suffix);
-      mark(`đã lọc xong thương hiệu ${suffix}, khớp ${matched} mục`);
-      result[key] = matched > 0 ? await readSellerRows(page) : [];
-      await clearBrandFilter(page);
-      mark(`đã xoá filter ${suffix}`);
-    }
+    const total = await readSellerRows(page);
+    mark(`đã đọc xong, ${total.length} dòng`);
 
-    mark("hoàn tất, trả kết quả");
-    return json(res, 200, { date: targetDate, cc: result.cc, ss: result.ss });
+    return json(res, 200, { date: targetDate, total });
   } catch (e) {
     mark(`lỗi: ${e.message || e}`);
     return json(res, 500, { error: `[${BUILD_TAG}] ${String(e.message || e)}` });
