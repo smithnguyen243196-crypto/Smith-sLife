@@ -23,14 +23,28 @@ async function waitReportLoaded(page, timeout = 20000) {
 }
 
 // Phiên headless hoàn toàn mới (chưa từng "đã xem") có thể hiện banner/dialog khuyến mại chặn click
-// (vd "Bạn đã đăng ký chương trình khuyến mại ..."). Đóng mọi overlay kiểu Kendo trước khi thao tác tiếp.
-async function dismissOverlay(page) {
-  for (let i = 0; i < 3; i++) {
+// (vd "Bạn đã đăng ký chương trình khuyến mại ..."), nhưng banner này hiện RA TRỄ sau khi trang đã load
+// xong nên chỉ kiểm tra 1 lần là không đủ -> chủ động dò trong cả 1 khoảng thời gian.
+async function dismissOverlay(page, windowMs = 3000) {
+  const start = Date.now();
+  do {
     const overlay = page.locator(".k-overlay").first();
-    if (!(await overlay.count())) return;
-    await page.keyboard.press("Escape").catch(() => {});
-    await overlay.click({ force: true, timeout: 2000 }).catch(() => {});
-    await page.waitForTimeout(400);
+    if (await overlay.count()) {
+      await page.keyboard.press("Escape").catch(() => {});
+      await overlay.click({ force: true, timeout: 1000 }).catch(() => {});
+    }
+    await page.waitForTimeout(300);
+  } while (Date.now() - start < windowMs);
+}
+
+// click() của Playwright tự lặp lại đến khi hết timeout nếu bị overlay chặn, nhưng overlay đó không tự mất
+// -> bọc lại: thử click nhanh, nếu bị chặn thì chủ động đóng overlay rồi click lại.
+async function clickSafe(locator, page) {
+  try {
+    await locator.click({ timeout: 8000 });
+  } catch {
+    await dismissOverlay(page, 1500);
+    await locator.click({ timeout: 15000 });
   }
 }
 
@@ -64,21 +78,21 @@ async function openUserReport(page, retailer) {
   // Mối quan tâm -> "Hàng bán theo nhân viên".
   // Kendo dropdown giữ song song 1 <option> ẩn trùng chữ với span hiển thị -> không dùng getByText trên cả widget,
   // phải nhắm đúng span.k-input (để mở) rồi li.k-item trong danh sách xổ xuống (để chọn).
-  await page.locator("kv-report-type span.k-input").first().click();
-  await page.locator("li.k-item").filter({ hasText: "Hàng bán theo nhân viên" }).first().click();
+  await clickSafe(page.locator("kv-report-type span.k-input").first(), page);
+  await clickSafe(page.locator("li.k-item").filter({ hasText: "Hàng bán theo nhân viên" }).first(), page);
 
   // Thời gian -> Tuỳ chỉnh -> Hôm nay -> Tạo báo cáo
-  await page.getByText("Tùy chỉnh", { exact: true }).first().click();
-  await page.getByText("Hôm nay", { exact: true }).first().click();
-  await page.getByText("Tạo báo cáo", { exact: true }).first().click();
+  await clickSafe(page.getByText("Tùy chỉnh", { exact: true }).first(), page);
+  await clickSafe(page.getByText("Hôm nay", { exact: true }).first(), page);
+  await clickSafe(page.getByText("Tạo báo cáo", { exact: true }).first(), page);
   await waitReportLoaded(page);
 }
 
 async function selectBrandSuffix(page, suffix) {
-  await dismissOverlay(page);
+  await dismissOverlay(page, 800); // overlay khuyến mại thường đã bị đóng ở openUserReport, chỉ kiểm tra nhanh
   const wrapper = page.locator(".k-multiselect:has(#tradeMarkFilter_taglist)");
   const input = wrapper.locator("input.k-input");
-  await input.click();
+  await clickSafe(input, page);
   await input.fill(`- ${suffix}`);
   await page.waitForTimeout(400); // Kendo lọc danh sách
 
