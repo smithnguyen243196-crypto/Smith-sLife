@@ -11,7 +11,7 @@ const PASSWORD = () => process.env.KIOTVIET_PASSWORD;
 const BRAND_SUFFIXES = ["CC", "SS"];
 // Đánh dấu phiên bản để khi báo lỗi có thể biết chắc server đang chạy đúng bản mới hay vẫn là bản cũ
 // (tránh mất công đoán do deploy nhầm/cache) — đổi chuỗi này mỗi khi sửa file.
-const BUILD_TAG = "kv-2026-07-02-overlay-retry";
+const BUILD_TAG = "kv-2026-07-02-sequential";
 
 const todayHoChiMinh = () => new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Ho_Chi_Minh" }); // YYYY-MM-DD
 
@@ -75,7 +75,13 @@ async function login(page, retailer) {
 
 async function openUserReport(page, retailer) {
   await page.goto(`https://${retailer}.kiotviet.vn/man/#/UserReport`, { waitUntil: "domcontentloaded" });
-  await page.getByText("Mối quan tâm", { exact: true }).first().waitFor({ timeout: 20000 });
+  await Promise.race([
+    page.getByText("Mối quan tâm", { exact: true }).first().waitFor({ timeout: 25000 }),
+    page.locator("#Password").waitFor({ timeout: 25000 }),
+  ]).catch(() => {});
+  if (await page.locator("#Password").count()) {
+    throw new Error("Phiên đăng nhập bị mất khi mở báo cáo (rơi về lại trang login)");
+  }
   await dismissOverlay(page);
 
   // Mối quan tâm -> "Hàng bán theo nhân viên".
@@ -89,6 +95,14 @@ async function openUserReport(page, retailer) {
   await clickSafe(page.getByText("Hôm nay", { exact: true }).first(), page);
   await clickSafe(page.getByText("Tạo báo cáo", { exact: true }).first(), page);
   await waitReportLoaded(page);
+}
+
+async function clearBrandFilter(page) {
+  const closeBtn = page.locator("#tradeMarkFilter_taglist .k-i-close");
+  while (await closeBtn.count()) {
+    await closeBtn.first().click();
+    await page.waitForTimeout(150);
+  }
 }
 
 async function selectBrandSuffix(page, suffix) {
@@ -132,20 +146,6 @@ async function readSellerRows(page) {
 // vì ta chỉ đọc số liệu từ text trong DOM, không cần hiển thị đầy đủ.
 const blockHeavyAssets = (page) => page.route(/\.(png|jpe?g|gif|svg|webp|woff2?|ttf|eot)(\?|$)/i, (route) => route.abort());
 
-// Mỗi thương hiệu (CC/SS) chạy trên 1 tab riêng (cùng context nên dùng chung cookie đăng nhập) để
-// 2 lượt lọc + chờ báo cáo (phần tốn thời gian nhất) chạy song song thay vì tuần tự -> giảm ~1 nửa thời gian.
-async function fetchBrandSuffix(context, retailer, suffix) {
-  const page = await context.newPage();
-  try {
-    await blockHeavyAssets(page);
-    await openUserReport(page, retailer);
-    const matched = await selectBrandSuffix(page, suffix);
-    return matched > 0 ? await readSellerRows(page) : [];
-  } finally {
-    await page.close();
-  }
-}
-
 export default async function handler(req, res) {
   if (req.method !== "POST") return json(res, 405, { error: "method" });
   if (!USERNAME() || !PASSWORD()) return json(res, 500, { error: "Chưa cấu hình KIOTVIET_USERNAME/KIOTVIET_PASSWORD trên server" });
@@ -163,17 +163,22 @@ export default async function handler(req, res) {
       executablePath: await chromium.executablePath(),
       headless: true,
     });
-    const context = await browser.newContext();
+    const page = await browser.newPage();
+    await blockHeavyAssets(page);
     const retailer = RETAILER();
 
-    const loginPage = await context.newPage();
-    await blockHeavyAssets(loginPage);
-    await login(loginPage, retailer);
-    await loginPage.close();
+    await login(page, retailer);
+    await openUserReport(page, retailer);
 
-    const [cc, ss] = await Promise.all(BRAND_SUFFIXES.map((suffix) => fetchBrandSuffix(context, retailer, suffix)));
+    const result = {};
+    for (const suffix of BRAND_SUFFIXES) {
+      const key = suffix.toLowerCase();
+      const matched = await selectBrandSuffix(page, suffix);
+      result[key] = matched > 0 ? await readSellerRows(page) : [];
+      await clearBrandFilter(page);
+    }
 
-    return json(res, 200, { date: targetDate, cc, ss });
+    return json(res, 200, { date: targetDate, cc: result.cc, ss: result.ss });
   } catch (e) {
     return json(res, 500, { error: `[${BUILD_TAG}] ${String(e.message || e)}` });
   } finally {
