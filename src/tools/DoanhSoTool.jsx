@@ -6,7 +6,6 @@ import { Card, SectionTitle, QuoteBar, Btn, IconBtn, Field, inputStyle, EmptySta
 import { Icon } from "../components/icons.jsx";
 
 const num = (v) => { const n = Number(v); return isNaN(n) ? 0 : n; };
-const pct = (a, total) => (total > 0 ? Math.round((a / total) * 1000) / 10 : 0);
 const shortDate = (s) => { const [, m, d] = s.split("-"); return `${d}/${m}`; };
 const addDays = (s, n) => { const d = new Date(s + "T00:00:00"); d.setDate(d.getDate() + n); return todayKey(d); };
 
@@ -33,7 +32,7 @@ function NumberInput({ value, onChange, placeholder }) {
   );
 }
 
-const METRICS = [["total", "Tổng SP"], ["cc", "SP CC"], ["ss", "SP SS"]];
+const METRICS = [["total", "Doanh thu"], ["cc", "SP CC"], ["ss", "SP SS"]];
 
 function SalesChart({ records, dates, metric }) {
   const w = 760, h = 230, padL = 34, padB = 28, padT = 14, padR = 8;
@@ -73,51 +72,6 @@ function SalesChart({ records, dates, metric }) {
         );
       })}
     </svg>
-  );
-}
-
-// Biểu đồ tròn: tổng theo từng nhân viên trong khoảng `dates`, chia % trên tổng 4 người.
-function SalesPie({ records, dates, metric }) {
-  const totals = SALES_STAFF.map((s) => ({
-    staff: s,
-    value: dates.reduce((sum, d) => { const r = records.find((x) => x.date === d && x.staff === s); return sum + (r ? num(r[metric]) : 0); }, 0),
-  }));
-  const grand = totals.reduce((s, t) => s + t.value, 0);
-
-  const size = 200, cx = size / 2, cy = size / 2, r = 88;
-  let angle = -Math.PI / 2;
-  const arcs = grand > 0 ? totals.filter((t) => t.value > 0).map((t) => {
-    const frac = t.value / grand;
-    const start = angle;
-    const end = angle + frac * Math.PI * 2;
-    angle = end;
-    const large = end - start > Math.PI ? 1 : 0;
-    const x1 = cx + r * Math.cos(start), y1 = cy + r * Math.sin(start);
-    const x2 = cx + r * Math.cos(end), y2 = cy + r * Math.sin(end);
-    return { staff: t.staff, value: t.value, frac, path: `M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2} Z` };
-  }) : [];
-
-  return (
-    <div style={{ display: "flex", gap: 20, flexWrap: "wrap", alignItems: "center", justifyContent: "center" }}>
-      <svg viewBox={`0 0 ${size} ${size}`} width={220} height={220} style={{ flexShrink: 0 }}>
-        {grand > 0 ? arcs.map((a) => (
-          <path key={a.staff} d={a.path} fill={SALES_STAFF_COLORS[a.staff] || T.ink} stroke={T.surface} strokeWidth="2" opacity="0.92" />
-        )) : <circle cx={cx} cy={cy} r={r} fill={T.surfaceSink} />}
-        <circle cx={cx} cy={cy} r={r * 0.55} fill={T.surface} />
-        <text x={cx} y={cy - 3} textAnchor="middle" fontSize="13" fontWeight="900" fill={T.ink}>{fmt(grand)}</text>
-        <text x={cx} y={cy + 13} textAnchor="middle" fontSize="9.5" fontWeight="700" fill={T.muted}>tổng</text>
-      </svg>
-      <div style={{ display: "grid", gap: 8 }}>
-        {totals.map((t) => (
-          <div key={t.staff} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13 }}>
-            <span style={{ width: 11, height: 11, borderRadius: "50%", background: SALES_STAFF_COLORS[t.staff], flexShrink: 0 }} />
-            <span style={{ fontWeight: 700, color: T.text, minWidth: 78 }}>{t.staff}</span>
-            <span style={{ fontWeight: 900, color: T.ink }}>{pct(t.value, grand)}%</span>
-            <span style={{ color: T.muted, fontSize: 12 }}>({fmt(t.value)})</span>
-          </div>
-        ))}
-      </div>
-    </div>
   );
 }
 
@@ -166,19 +120,19 @@ export default function DoanhSoTool({ quote }) {
 
   const delRecord = (id) => { setRecords((p) => p.filter((x) => x.id !== id)); api.deleteDoanhSo(id); };
 
-  // Tự đăng nhập KiotViet, đọc báo cáo "Hàng bán theo nhân viên" hôm nay -> tự điền cột Tổng SP.
+  // Tự đăng nhập KiotViet, đọc báo cáo "Hàng bán theo nhân viên" hôm nay -> tự điền cột Doanh thu.
   const handleKiotviet = async () => {
     setKvBusy(true); setKvMsg("");
     try {
-      const { total: sellers } = await api.fetchKiotvietDoanhSo(date);
+      const { revenue: sellers } = await api.fetchKiotvietDoanhSo(date);
       let matched = 0;
       setForm((prev) => {
         const next = { ...prev };
-        (sellers || []).forEach(({ name, sl }) => {
+        (sellers || []).forEach(({ name, revenue }) => {
           const staff = matchStaff(name);
-          if (!staff || sl == null) return;
+          if (!staff || revenue == null) return;
           matched++;
-          next[staff] = { ...next[staff], total: String(sl) };
+          next[staff] = { ...next[staff], total: String(revenue) };
         });
         return next;
       });
@@ -224,24 +178,20 @@ export default function DoanhSoTool({ quote }) {
         {kvMsg && <div style={{ fontSize: 12.5, fontWeight: 700, color: kvMsg.startsWith("Lỗi") ? T.danger : T.success, marginBottom: 12 }}>{kvMsg}</div>}
 
         <div style={{ display: "grid", gap: 10 }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1.1fr 0.85fr 0.85fr 0.85fr 1fr", gap: 8, padding: "0 2px", fontSize: 11.5, fontWeight: 800, color: T.muted, textTransform: "uppercase", letterSpacing: ".04em" }}>
-            <span>Nhân viên</span><span style={{ textAlign: "right" }}>SP CC</span><span style={{ textAlign: "right" }}>SP SS</span><span style={{ textAlign: "right" }}>Tổng SP</span><span style={{ textAlign: "right" }}>% CC · % SS</span>
+          <div style={{ display: "grid", gridTemplateColumns: "1.1fr 0.85fr 0.85fr 1fr", gap: 8, padding: "0 2px", fontSize: 11.5, fontWeight: 800, color: T.muted, textTransform: "uppercase", letterSpacing: ".04em" }}>
+            <span>Nhân viên</span><span style={{ textAlign: "right" }}>SP CC</span><span style={{ textAlign: "right" }}>SP SS</span><span style={{ textAlign: "right" }}>Doanh thu</span>
           </div>
-          {SALES_STAFF.map((s) => {
-            const cc = num(form[s]?.cc), ss = num(form[s]?.ss), total = num(form[s]?.total);
-            return (
-              <div key={s} style={{ display: "grid", gridTemplateColumns: "1.1fr 0.85fr 0.85fr 0.85fr 1fr", gap: 8, alignItems: "center" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 7, minWidth: 0 }}>
-                  <span style={{ width: 10, height: 10, borderRadius: "50%", background: SALES_STAFF_COLORS[s], flexShrink: 0 }} />
-                  <span style={{ fontWeight: 700, fontSize: 14, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s}</span>
-                </div>
-                <NumberInput value={form[s]?.cc || ""} onChange={(v) => setField(s, "cc", v)} placeholder="0" />
-                <NumberInput value={form[s]?.ss || ""} onChange={(v) => setField(s, "ss", v)} placeholder="0" />
-                <NumberInput value={form[s]?.total || ""} onChange={(v) => setField(s, "total", v)} placeholder="0" />
-                <div style={{ textAlign: "right", fontSize: 12.5, fontWeight: 700, color: T.muted, whiteSpace: "nowrap" }}>{pct(cc, total)}% · {pct(ss, total)}%</div>
+          {SALES_STAFF.map((s) => (
+            <div key={s} style={{ display: "grid", gridTemplateColumns: "1.1fr 0.85fr 0.85fr 1fr", gap: 8, alignItems: "center" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 7, minWidth: 0 }}>
+                <span style={{ width: 10, height: 10, borderRadius: "50%", background: SALES_STAFF_COLORS[s], flexShrink: 0 }} />
+                <span style={{ fontWeight: 700, fontSize: 14, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s}</span>
               </div>
-            );
-          })}
+              <NumberInput value={form[s]?.cc || ""} onChange={(v) => setField(s, "cc", v)} placeholder="0" />
+              <NumberInput value={form[s]?.ss || ""} onChange={(v) => setField(s, "ss", v)} placeholder="0" />
+              <NumberInput value={form[s]?.total || ""} onChange={(v) => setField(s, "total", v)} placeholder="0" />
+            </div>
+          ))}
         </div>
 
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 14, paddingTop: 12, borderTop: `1px solid ${T.line}` }}>
@@ -276,16 +226,6 @@ export default function DoanhSoTool({ quote }) {
         )}
       </Card>
 
-      {/* Tỷ lệ đóng góp */}
-      <Card>
-        <SectionTitle icon="report">Tỷ lệ đóng góp ({METRICS.find(([m]) => m === metric)?.[1]})</SectionTitle>
-        {records.length === 0 ? (
-          <EmptyState>Chưa có dữ liệu — nhập doanh số ở trên để xem tỷ lệ.</EmptyState>
-        ) : (
-          <SalesPie records={records} dates={dates} metric={metric} />
-        )}
-      </Card>
-
       {/* Lịch sử */}
       <Card>
         <SectionTitle icon="calendar">Lịch sử nhập</SectionTitle>
@@ -305,7 +245,7 @@ export default function DoanhSoTool({ quote }) {
                     <div key={r.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 12px", background: T.surface }}>
                       <span style={{ width: 9, height: 9, borderRadius: "50%", background: SALES_STAFF_COLORS[r.staff], flexShrink: 0 }} />
                       <span style={{ flex: 1, minWidth: 0, fontWeight: 700, fontSize: 13.5, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.staff}</span>
-                      <span style={{ fontSize: 12.5, color: T.muted, fontWeight: 600 }}>CC {fmt(r.cc)} ({pct(r.cc, r.total)}%) · SS {fmt(r.ss)} ({pct(r.ss, r.total)}%)</span>
+                      <span style={{ fontSize: 12.5, color: T.muted, fontWeight: 600 }}>CC {fmt(r.cc)} · SS {fmt(r.ss)}</span>
                       <span style={{ fontWeight: 900, fontSize: 14, color: T.ink, minWidth: 44, textAlign: "right" }}>{fmt(r.total)}</span>
                       <IconBtn icon="trash" onClick={() => delRecord(r.id)} title="Xoá" color={T.danger} size={15} />
                     </div>

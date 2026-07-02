@@ -44,7 +44,7 @@ export const api = {
   saveDoanhSo: (rec) => j("/api/doanhso", { method: "POST", body: JSON.stringify(rec) }).catch(() => null),
   deleteDoanhSo: (id) => j(`/api/doanhso?id=${id}`, { method: "DELETE" }).catch(() => null),
 
-  // Tự đăng nhập KiotViet và đọc báo cáo "Hàng bán theo nhân viên" hôm nay -> { total: [{name, sl}] }
+  // Tự đăng nhập KiotViet và đọc báo cáo "Hàng bán theo nhân viên" hôm nay -> { revenue: [{name, revenue}] }
   // Không bắt lỗi ở đây để UI có thể hiện thông báo lỗi cụ thể (vd chưa cấu hình tài khoản).
   fetchKiotvietDoanhSo: async (date) => {
     const r = await fetch("/api/kiotviet-report", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ date }) });
