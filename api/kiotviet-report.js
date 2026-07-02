@@ -46,14 +46,18 @@ async function login(page, retailer) {
 
 async function openUserReport(page, retailer) {
   await page.goto(`https://${retailer}.kiotviet.vn/man/#/UserReport`, { waitUntil: "domcontentloaded" });
-  await page.getByText("Mối quan tâm", { exact: true }).waitFor({ timeout: 20000 });
-  // Mối quan tâm -> "Hàng bán theo nhân viên"
-  await page.locator('kv-report-type').getByText("Bán hàng", { exact: true }).click();
-  await page.getByText("Hàng bán theo nhân viên", { exact: true }).click();
+  await page.getByText("Mối quan tâm", { exact: true }).first().waitFor({ timeout: 20000 });
+
+  // Mối quan tâm -> "Hàng bán theo nhân viên".
+  // Kendo dropdown giữ song song 1 <option> ẩn trùng chữ với span hiển thị -> không dùng getByText trên cả widget,
+  // phải nhắm đúng span.k-input (để mở) rồi li.k-item trong danh sách xổ xuống (để chọn).
+  await page.locator("kv-report-type span.k-input").first().click();
+  await page.locator("li.k-item").filter({ hasText: "Hàng bán theo nhân viên" }).first().click();
+
   // Thời gian -> Tuỳ chỉnh -> Hôm nay -> Tạo báo cáo
   await page.getByText("Tùy chỉnh", { exact: true }).first().click();
-  await page.getByText("Hôm nay", { exact: true }).click();
-  await page.getByText("Tạo báo cáo", { exact: true }).click();
+  await page.getByText("Hôm nay", { exact: true }).first().click();
+  await page.getByText("Tạo báo cáo", { exact: true }).first().click();
   await waitReportLoaded(page);
 }
 
