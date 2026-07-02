@@ -44,12 +44,12 @@ export const api = {
   saveDoanhSo: (rec) => j("/api/doanhso", { method: "POST", body: JSON.stringify(rec) }).catch(() => null),
   deleteDoanhSo: (id) => j(`/api/doanhso?id=${id}`, { method: "DELETE" }).catch(() => null),
 
-  // Đọc ảnh báo cáo doanh số bằng AI (Claude Vision) -> { sellers: [{name, sl}] }
-  // Không bắt lỗi ở đây để UI có thể hiện thông báo lỗi cụ thể (vd thiếu API key).
-  parseSalesImage: async (imageDataUrl) => {
-    const r = await fetch("/api/parse-sales-image", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ image: imageDataUrl }) });
+  // Tự đăng nhập KiotViet và đọc báo cáo "Hàng bán theo nhân viên" hôm nay -> { cc: [{name, sl}], ss: [{name, sl}] }
+  // Không bắt lỗi ở đây để UI có thể hiện thông báo lỗi cụ thể (vd chưa cấu hình tài khoản).
+  fetchKiotvietDoanhSo: async (date) => {
+    const r = await fetch("/api/kiotviet-report", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ date }) });
     const d = await r.json();
-    if (!r.ok) throw new Error(d.error || `parse-sales-image -> ${r.status}`);
+    if (!r.ok) throw new Error(d.error || `kiotviet-report -> ${r.status}`);
     return d;
   },
 };

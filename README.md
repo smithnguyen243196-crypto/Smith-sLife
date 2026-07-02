@@ -7,7 +7,7 @@ Dữ liệu lưu thẳng vào Notion (nguồn chân lý → 2 thiết bị luôn
 ```bash
 npm install
 npm i -g vercel
-cp .env.example .env   # NOTION_TOKEN + Upstash (mục dưới)
+cp .env.example .env   # NOTION_TOKEN + Upstash + KIOTVIET_* (mục dưới)
 vercel dev             # frontend + /api tại http://localhost:3000
 ```
 
@@ -16,6 +16,7 @@ vercel dev             # frontend + /api tại http://localhost:3000
 2. Vercel → Add New → Project → chọn repo (tự nhận Vite).
 3. Vercel → Storage → **Upstash Redis** → Connect vào project (tự thêm KV_REST_API_URL/KV_REST_API_TOKEN).
 4. Settings → Environment Variables: dán `NOTION_TOKEN`. Các `DS_*` đã có sẵn trong code mẫu nhưng nên thêm vào env cho gọn.
+   Thêm `KIOTVIET_USERNAME` + `KIOTVIET_PASSWORD` (tài khoản đăng nhập man.kiotviet.vn, dùng cho nút "Lấy từ KiotViet"). Tuỳ chọn `KIOTVIET_RETAILER` (mặc định `huyenthoco`).
 5. Deploy.
 
 ## Bắt buộc làm 1 lần trong Notion
@@ -37,6 +38,7 @@ Câu Nói Hay · Ngày · Nhiệm Vụ (Chế độ xem Nhiệm Vụ và Dự Á
 - **Thêm/đánh dấu/xoá nhiệm vụ**: ghi thẳng vào @Nhiệm Vụ (đặt Trạng Thái=Hoạt Động, Ngày Thực Hiện=hôm nay để hiện trong view "Hôm Nay").
 - **Ví — thêm giao dịch**: tạo 1 dòng trong @Ví Cá Nhân; số dư tính lại từ lịch sử.
 - **Kiểm Két**: mọi thao tác đẩy lên Upstash → desktop/mobile khớp nhau realtime; bấm **"Lưu vào Notion"** mới tạo 1 dòng tổng kết trong @Kiểm Két (tự đặt Trạng thái Khớp/Thừa/Thiếu theo Kết quả).
+- **Doanh Số — "Lấy từ KiotViet"**: `api/kiotviet-report.js` dùng Playwright (headless Chromium qua `@sparticuz/chromium`) tự đăng nhập man.kiotviet.vn, mở báo cáo "Hàng bán theo nhân viên" của hôm nay, lọc theo Thương hiệu kết thúc `- CC` / `- SS`, đọc SL bán trực tiếp từ DOM báo cáo rồi tự điền vào form (vẫn cần bấm Lưu để ghi Notion). Chỉ hỗ trợ ngày hôm nay. Chạy nặng hơn các API khác (đăng nhập + render 2 báo cáo) nên `vercel.json` đặt `maxDuration: 60`; lần deploy đầu nên thử nút này ngay vì selector đăng nhập có thể cần chỉnh nếu KiotViet đổi giao diện trang login.
 
 ## Ghi chú kỹ thuật
 - Dùng Notion API **2025-09-03** qua *data source* (bắt buộc vì Nhiệm Vụ là database multi-source gộp Nhiệm Vụ + Dự Án).

@@ -10,7 +10,7 @@ const pct = (a, total) => (total > 0 ? Math.round((a / total) * 1000) / 10 : 0);
 const shortDate = (s) => { const [, m, d] = s.split("-"); return `${d}/${m}`; };
 const addDays = (s, n) => { const d = new Date(s + "T00:00:00"); d.setDate(d.getDate() + n); return todayKey(d); };
 
-// Khớp tên thô đọc từ ảnh (vd "Minh Trí - 0919 502 562", "Đô") với danh sách SALES_STAFF.
+// Khớp tên thô đọc từ báo cáo KiotViet (vd "Minh Trí - 0919 502 562", "Đô") với danh sách SALES_STAFF.
 function matchStaff(raw) {
   const r = (raw || "").normalize("NFC").trim().toLowerCase();
   if (!r) return null;
@@ -24,13 +24,6 @@ function matchStaff(raw) {
   }
   return best;
 }
-
-const fileToDataURL = (file) => new Promise((resolve, reject) => {
-  const fr = new FileReader();
-  fr.onload = () => resolve(fr.result);
-  fr.onerror = reject;
-  fr.readAsDataURL(file);
-});
 
 function NumberInput({ value, onChange, placeholder }) {
   const display = value ? Number(value).toLocaleString("vi-VN") : "";
@@ -135,8 +128,8 @@ export default function DoanhSoTool({ quote }) {
   const [busy, setBusy] = useState(false);
   const [savedAt, setSavedAt] = useState(0);
   const [metric, setMetric] = useState("total");
-  const [imgBusy, setImgBusy] = useState(null); // "cc" | "ss" | null
-  const [imgMsg, setImgMsg] = useState("");
+  const [kvBusy, setKvBusy] = useState(false);
+  const [kvMsg, setKvMsg] = useState("");
 
   useEffect(() => { api.getDoanhSo().then((r) => Array.isArray(r) && setRecords(r)); }, []);
 
@@ -173,29 +166,30 @@ export default function DoanhSoTool({ quote }) {
 
   const delRecord = (id) => { setRecords((p) => p.filter((x) => x.id !== id)); api.deleteDoanhSo(id); };
 
-  // Tải ảnh báo cáo (chụp màn hình) -> AI đọc SL theo từng người bán -> tự điền vào cột CC hoặc SS.
-  const handleImage = async (kind, file) => {
-    if (!file) return;
-    setImgBusy(kind); setImgMsg("");
+  // Tự đăng nhập KiotViet, đọc báo cáo "Hàng bán theo nhân viên" hôm nay -> tự điền cột SP CC và SP SS.
+  const handleKiotviet = async () => {
+    setKvBusy(true); setKvMsg("");
     try {
-      const dataUrl = await fileToDataURL(file);
-      const { sellers } = await api.parseSalesImage(dataUrl);
-      let matched = 0;
+      const { cc, ss } = await api.fetchKiotvietDoanhSo(date);
+      let matched = 0, total = 0;
       setForm((prev) => {
         const next = { ...prev };
-        (sellers || []).forEach(({ name, sl }) => {
-          const staff = matchStaff(name);
-          if (!staff || sl == null) return;
-          matched++;
-          next[staff] = { ...next[staff], [kind]: String(sl) };
+        [["cc", cc], ["ss", ss]].forEach(([kind, sellers]) => {
+          (sellers || []).forEach(({ name, sl }) => {
+            total++;
+            const staff = matchStaff(name);
+            if (!staff || sl == null) return;
+            matched++;
+            next[staff] = { ...next[staff], [kind]: String(sl) };
+          });
         });
         return next;
       });
-      setImgMsg(matched ? `Đã điền ${matched}/${(sellers || []).length} nhân viên từ ảnh — kiểm tra lại rồi bấm Lưu.` : "Không khớp được tên nhân viên nào từ ảnh.");
+      setKvMsg(matched ? `Đã điền ${matched}/${total} dòng từ KiotViet — kiểm tra lại rồi bấm Lưu.` : "Không có dữ liệu khớp từ KiotViet hôm nay.");
     } catch (e) {
-      setImgMsg("Lỗi đọc ảnh: " + (e.message || e));
+      setKvMsg("Lỗi lấy dữ liệu KiotViet: " + (e.message || e));
     } finally {
-      setImgBusy(null);
+      setKvBusy(false);
     }
   };
 
@@ -228,16 +222,9 @@ export default function DoanhSoTool({ quote }) {
               <input type="date" value={date} onChange={(e) => setDate(e.target.value)} style={inputStyle} />
             </Field>
           </div>
-          <div style={{ display: "flex", gap: 8 }}>
-            {[["cc", "📷 Tải ảnh SP CC"], ["ss", "📷 Tải ảnh SP SS"]].map(([kind, label]) => (
-              <label key={kind} className="press" style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "10px 14px", borderRadius: R.ctrl, border: `1.5px solid ${T.line}`, background: T.surface, color: T.ink, cursor: "pointer", fontFamily: FONT, fontWeight: 700, fontSize: 13.5 }}>
-                {imgBusy === kind ? "Đang đọc ảnh..." : label}
-                <input type="file" accept="image/*" hidden disabled={!!imgBusy} onChange={(e) => { handleImage(kind, e.target.files[0]); e.target.value = ""; }} />
-              </label>
-            ))}
-          </div>
+          <Btn onClick={handleKiotviet} disabled={kvBusy}>{kvBusy ? "Đang lấy dữ liệu..." : "🔄 Lấy từ KiotViet"}</Btn>
         </div>
-        {imgMsg && <div style={{ fontSize: 12.5, fontWeight: 700, color: imgMsg.startsWith("Lỗi") ? T.danger : T.success, marginBottom: 12 }}>{imgMsg}</div>}
+        {kvMsg && <div style={{ fontSize: 12.5, fontWeight: 700, color: kvMsg.startsWith("Lỗi") ? T.danger : T.success, marginBottom: 12 }}>{kvMsg}</div>}
 
         <div style={{ display: "grid", gap: 10 }}>
           <div style={{ display: "grid", gridTemplateColumns: "1.1fr 0.85fr 0.85fr 0.85fr 1fr", gap: 8, padding: "0 2px", fontSize: 11.5, fontWeight: 800, color: T.muted, textTransform: "uppercase", letterSpacing: ".04em" }}>
